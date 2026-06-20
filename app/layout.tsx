@@ -16,8 +16,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Next.js Starter Kit",
-  description: "Next.js v15, TypeScript, TailwindCSS v4, shadcn/ui로 구성된 스타터 킷입니다.",
+  title: {
+    default: "견적서 시스템",
+    template: "%s | 견적서 시스템",
+  },
+  description: "노션 기반 견적서 조회 및 PDF 다운로드 서비스입니다.",
 };
 
 export default function RootLayout({
