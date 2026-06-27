@@ -18,11 +18,11 @@ Font.register({
   family: "NotoSansKR",
   fonts: [
     {
-      src: path.join(process.cwd(), "public/fonts/NotoSansKR-Regular.ttf"),
+      src: path.join(process.cwd(), "public/fonts/NotoSansKR-Regular-subset.ttf"),
       fontWeight: "normal",
     },
     {
-      src: path.join(process.cwd(), "public/fonts/NotoSansKR-Bold.ttf"),
+      src: path.join(process.cwd(), "public/fonts/NotoSansKR-Bold-subset.ttf"),
       fontWeight: "bold",
     },
   ],
