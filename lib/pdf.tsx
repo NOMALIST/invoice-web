@@ -2,30 +2,49 @@
 // @react-pdf/renderer를 사용해 견적서 PDF 레이아웃을 정의합니다
 // 이 모듈은 서버 사이드(API Route)에서만 사용됩니다
 
+import path from "node:path";
 import {
   Document,
   Page,
   Text,
   View,
   StyleSheet,
+  Font,
 } from "@react-pdf/renderer";
 import type { Invoice } from "@/types/invoice";
+
+// 한글 지원 폰트 등록 (모듈 레벨 1회 실행)
+Font.register({
+  family: "NotoSansKR",
+  fonts: [
+    {
+      src: path.join(process.cwd(), "public/fonts/NotoSansKR-Regular.ttf"),
+      fontWeight: "normal",
+    },
+    {
+      src: path.join(process.cwd(), "public/fonts/NotoSansKR-Bold.ttf"),
+      fontWeight: "bold",
+    },
+  ],
+});
 
 // PDF 스타일 정의
 const styles = StyleSheet.create({
   page: {
     padding: 48,
     fontSize: 10,
-    fontFamily: "Helvetica",
+    fontFamily: "NotoSansKR",
     color: "#111827",
   },
   title: {
     fontSize: 24,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSansKR",
+    fontWeight: "bold",
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 10,
+    fontFamily: "NotoSansKR",
     color: "#6B7280",
     marginBottom: 24,
   },
@@ -45,6 +64,7 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 8,
+    fontFamily: "NotoSansKR",
     color: "#9CA3AF",
     textTransform: "uppercase",
     letterSpacing: 0.5,
@@ -52,10 +72,12 @@ const styles = StyleSheet.create({
   },
   infoValue: {
     fontSize: 11,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSansKR",
+    fontWeight: "bold",
   },
   infoValueSmall: {
     fontSize: 10,
+    fontFamily: "NotoSansKR",
   },
   statusBadge: {
     backgroundColor: "#F3F4F6",
@@ -63,6 +85,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 4,
     fontSize: 10,
+    fontFamily: "NotoSansKR",
   },
   // 테이블
   tableHeader: {
@@ -87,6 +110,7 @@ const styles = StyleSheet.create({
   colAmount: { flex: 2, textAlign: "right" },
   headerText: {
     fontSize: 8,
+    fontFamily: "NotoSansKR",
     color: "#6B7280",
     textTransform: "uppercase",
   },
@@ -101,12 +125,14 @@ const styles = StyleSheet.create({
   },
   totalLabel: {
     fontSize: 11,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSansKR",
+    fontWeight: "bold",
     marginRight: 24,
   },
   totalValue: {
     fontSize: 11,
-    fontFamily: "Helvetica-Bold",
+    fontFamily: "NotoSansKR",
+    fontWeight: "bold",
   },
 });
 
