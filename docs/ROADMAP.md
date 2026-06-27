@@ -116,6 +116,8 @@
 - ✅ `app/api/generate-pdf/route.ts` — POST API Route: invoiceId 수신 → Notion 조회 → `renderToBuffer` → PDF 응답 (코드 작성 완료)
 - ✅ 한국어 파일명 인코딩 처리 (`Content-Disposition: filename*=UTF-8''...`)
 - ✅ API Route 내부 PDF 다운로드 동작 가능
+- ✅ `public/fonts/NotoSansKR-Regular.ttf`, `NotoSansKR-Bold.ttf` — Google Fonts에서 다운로드하여 배치
+- ✅ `Font.register()` 로 NotoSansKR 한글 폰트 등록 — PDF 한글 깨짐 문제 해결
 
 ### Task 3.3: 견적서 페이지 통합 ✅ — 완료
 
@@ -275,7 +277,7 @@
 |------|:--------:|:--------:|------|
 | 견적서 페이지 (`app/invoice/[id]/page.tsx`) | ✅ | ✅ | 정상 동작 |
 | Notion 연동 (`lib/notion.ts`) | ✅ | ✅ | `.env.local` 설정 완료 |
-| PDF 생성 (`lib/pdf.tsx`) | ✅ | ✅ | 정상 동작 |
+| PDF 생성 (`lib/pdf.tsx`) | ✅ | ✅ | 정상 동작 (한글 폰트 NotoSansKR 적용) |
 | PDF API (`app/api/generate-pdf/route.ts`) | ✅ | ✅ | 정상 동작 |
 | 견적서 UI 컴포넌트 (`components/invoice/*`) | ✅ | ✅ | 정상 렌더 |
 | 404 페이지 (`app/not-found.tsx`) | ✅ | ✅ | 정상 |
@@ -296,4 +298,4 @@
 
 **PRD 참조**: docs/PRD.md
 **작성일**: 2025-10-02
-**최종 수정**: 2026-06-28
+**최종 수정**: 2026-06-28 (PDF 한글 폰트 적용 완료)
