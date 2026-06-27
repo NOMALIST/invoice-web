@@ -5,6 +5,7 @@
 
 import { useState } from "react";
 import { Download } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
 interface DownloadButtonProps {
@@ -38,9 +39,15 @@ export function DownloadButton({ invoiceId, invoiceNumber }: DownloadButtonProps
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      // 다운로드 성공 알림
+      toast.success("PDF가 다운로드되었습니다.", {
+        description: `견적서_${invoiceNumber}.pdf 파일을 저장했습니다.`,
+      });
     } catch (error) {
       console.error("PDF 다운로드 오류:", error);
-      alert("PDF 다운로드 중 오류가 발생했습니다. 다시 시도해 주세요.");
+      toast.error("PDF 다운로드 실패", {
+        description: "다운로드 중 오류가 발생했습니다. 다시 시도해 주세요.",
+      });
     } finally {
       setIsLoading(false);
     }
