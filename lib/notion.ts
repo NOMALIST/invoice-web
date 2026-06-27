@@ -1,11 +1,13 @@
 // Notion API 클라이언트 초기화 및 견적서 헬퍼 함수
 
 import { Client } from "@notionhq/client";
+import { APIResponseError, APIErrorCode, RequestTimeoutError } from "@notionhq/client";
 import type { Invoice, InvoiceItem, InvoiceListItem } from "@/types/invoice";
 
-// Notion 클라이언트 싱글톤 인스턴스
+// Notion 클라이언트 싱글톤 인스턴스 (15초 타임아웃 설정)
 const notion = new Client({
   auth: process.env.NOTION_API_KEY,
+  timeoutMs: 15_000,
 });
 
 // -------------------------------------------
@@ -86,9 +88,25 @@ export async function getInvoice(pageId: string): Promise<Invoice | null> {
     );
 
     return notionPageToInvoice(page, items);
-  } catch {
-    // 존재하지 않는 페이지 또는 접근 불가
-    return null;
+  } catch (error) {
+    if (APIResponseError.isAPIResponseError(error)) {
+      // 404: 페이지 없음 / 권한 오류
+      if (
+        error.code === APIErrorCode.ObjectNotFound ||
+        error.code === APIErrorCode.Unauthorized ||
+        error.code === APIErrorCode.RestrictedResource
+      ) {
+        return null;
+      }
+      // 그 외 API 오류 (rate limit, server error 등) — 상위로 전파
+      throw error;
+    }
+    if (RequestTimeoutError.isRequestTimeoutError(error)) {
+      // 네트워크 타임아웃 — 상위 error.tsx에서 처리
+      throw error;
+    }
+    // 알 수 없는 네트워크/런타임 오류
+    throw error;
   }
 }
 
