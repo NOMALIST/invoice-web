@@ -138,13 +138,13 @@
 - [x] Notion Integration을 두 데이터베이스에 연결(공유)
 - [x] 로컬 개발 서버에서 실제 견적서 조회 및 PDF 다운로드 동작 확인
 
-### Task 4.1: 에러 처리 및 로딩 UI 개선 🚧 — 진행 중
+### Task 4.1: 에러 처리 및 로딩 UI 개선 ✅ — 완료
 
 - ✅ `app/invoice/[id]/loading.tsx` — 견적서 조회 중 스켈레톤 로딩 UI 구현
 - ✅ `app/invoice/[id]/error.tsx` — Notion API 오류 시 에러 바운더리 페이지 구현
-- [x] PDF 다운로드 실패 시 토스트 알림 (`sonner`) 적용 — `toast.error()` / `toast.success()` 완료
-- [ ] Notion API 응답 지연 대비 타임아웃 처리 (권장: 15초)
-- [ ] `getInvoice` 함수에 에러 타입 분류 (404 vs 권한오류 vs 네트워크오류)
+- ✅ PDF 다운로드 실패 시 토스트 알림 (`sonner`) 적용 — `toast.error()` / `toast.success()` 완료
+- ✅ Notion API 응답 지연 대비 타임아웃 처리 (`timeoutMs: 15_000`) — 완료
+- ✅ `getInvoice` 함수에 에러 타입 분류 (404/권한오류 → `null`, 그 외 → `throw`) — 완료
 
 ### Task 4.2: 성능 최적화 — 대기
 
@@ -267,7 +267,7 @@
 | Phase 1 | 애플리케이션 골격 구축 | ✅ 완료 |
 | Phase 2 | UI/UX 완성 | ✅ 완료 |
 | Phase 3 | 핵심 기능 구현 (Notion API + PDF) | ✅ 완료 |
-| Phase 4 | 품질 강화 및 배포 | 🚧 진행 중 (Task 4.1 notion.ts 타임아웃/에러 분류 미완료) |
+| Phase 4 | 품질 강화 및 배포 | 🚧 진행 중 (Task 4.2~4.4 대기) |
 | Phase 5 | 관리 기능 (대시보드, 상태 관리) | 계획됨 |
 | Phase 6 | 자동화 및 고급 기능 | 장기 계획 |
 
@@ -289,7 +289,7 @@
 | Task | 내용 | 상태 |
 |------|------|------|
 | Task 4.0 | 환경변수 설정 (`.env.local` 생성) | ✅ 완료 |
-| Task 4.1 | 에러 처리 및 로딩 UI 개선 | 🚧 진행 중 (타임아웃/에러 분류 미완료) |
+| Task 4.1 | 에러 처리 및 로딩 UI 개선 | ✅ 완료 |
 | Task 4.2 | 성능 최적화 (ISR 캐싱) | ⏳ 대기 |
 | Task 4.3 | 테스트 (단위/API/E2E) | ⏳ 대기 |
 | Task 4.4 | 배포 및 운영 준비 (Vercel) | ⏳ 대기 |
@@ -298,4 +298,4 @@
 
 **PRD 참조**: docs/PRD.md
 **작성일**: 2025-10-02
-**최종 수정**: 2026-06-28 (PDF 한글 폰트 적용 완료)
+**최종 수정**: 2026-06-28 (Task 4.1 에러 처리 및 로딩 UI 개선 완료)

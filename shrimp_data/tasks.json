@@ -37,10 +37,10 @@
       "id": "1e2541dd-284f-4d9c-9a46-d2ec647cd2b3",
       "name": "lib/notion.ts getInvoice 타임아웃 및 에러 타입 분류 개선",
       "description": "getInvoice 함수에 15초 타임아웃을 추가하고, @notionhq/client의 APIResponseError를 활용하여 404/권한오류/네트워크오류를 분류합니다. 반환 타입(Promise<Invoice | null>)은 변경하지 않아 호출 측 코드 변경이 불필요합니다.",
-      "status": "pending",
+      "status": "completed",
       "dependencies": [],
       "createdAt": "2026-06-27T07:45:20.563Z",
-      "updatedAt": "2026-06-27T07:45:20.563Z",
+      "updatedAt": "2026-06-27T16:02:50.135Z",
       "relatedFiles": [
         {
           "path": "lib/notion.ts",
@@ -52,7 +52,9 @@
       ],
       "implementationGuide": "1. lib/notion.ts 상단에 `import { APIResponseError } from '@notionhq/client'` 추가\n2. getInvoice 함수 내부 수정:\n   - 타임아웃 Promise 생성: `new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), 15000))`\n   - 실제 조회 Promise: 기존 notion.pages.retrieve 로직\n   - `await Promise.race([invoicePromise, timeoutPromise])` 패턴 적용\n3. catch 블록 에러 타입 분류:\n   - `error instanceof APIResponseError && error.status === 404` → console.warn + return null\n   - `error instanceof APIResponseError && (error.status === 401 || error.status === 403)` → console.warn + return null\n   - `error instanceof Error && error.message === 'TIMEOUT'` → console.warn('Notion API 타임아웃') + return null\n   - 그 외 → console.error(error) + return null",
       "verificationCriteria": "1. lib/notion.ts에 APIResponseError import 확인\n2. getInvoice 함수 내 Promise.race 패턴 확인\n3. catch 블록에 에러 타입별 분기 확인\n4. TypeScript 타입 에러 없음 (npx tsc --noEmit)\n5. 반환 타입 Promise<Invoice | null> 유지",
-      "analysisResult": "Phase 4 Task 4.1 — 견적서 시스템 에러 처리 및 로딩 UI 개선. 핵심 목표: (1) Notion API 조회 중 로딩 스켈레톤 UI 표시, (2) API 오류 시 에러 바운더리 페이지 표시, (3) PDF 다운로드 실패 시 alert 대신 sonner toast 표시, (4) getInvoice에 15초 타임아웃 + 에러 타입 분류 적용. 사전 작업: shadcn CLI로 skeleton, sonner 컴포넌트 설치 필요."
+      "analysisResult": "Phase 4 Task 4.1 — 견적서 시스템 에러 처리 및 로딩 UI 개선. 핵심 목표: (1) Notion API 조회 중 로딩 스켈레톤 UI 표시, (2) API 오류 시 에러 바운더리 페이지 표시, (3) PDF 다운로드 실패 시 alert 대신 sonner toast 표시, (4) getInvoice에 15초 타임아웃 + 에러 타입 분류 적용. 사전 작업: shadcn CLI로 skeleton, sonner 컴포넌트 설치 필요.",
+      "summary": "lib/notion.ts 개선 완료. 1) Client 생성자에 timeoutMs: 15_000 추가로 15초 타임아웃 설정. 2) APIResponseError, APIErrorCode, RequestTimeoutError를 @notionhq/client에서 import. 3) catch 블록을 에러 타입별로 분류 — ObjectNotFound/Unauthorized/RestrictedResource는 null 반환, rate limit·server error·timeout·알 수 없는 오류는 throw하여 error.tsx 에러 바운더리에서 처리. 반환 타입(Promise<Invoice | null>) 유지, TypeScript 타입 오류 없음.",
+      "completedAt": "2026-06-27T16:02:50.129Z"
     },
     {
       "id": "ada133a9-c36d-4edf-9888-81dfbc9ea9d1",
