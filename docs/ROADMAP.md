@@ -146,10 +146,10 @@
 - ✅ Notion API 응답 지연 대비 타임아웃 처리 (`timeoutMs: 15_000`) — 완료
 - ✅ `getInvoice` 함수에 에러 타입 분류 (404/권한오류 → `null`, 그 외 → `throw`) — 완료
 
-### Task 4.2: 성능 최적화 — 대기
+### Task 4.2: 성능 최적화 ⚠️ — 부분 완료
 
-- [ ] Next.js `revalidate` 설정으로 Notion 데이터 캐싱 전략 수립 (ISR, 권장: 60초)
-- [ ] `generateStaticParams` 검토 (자주 조회되는 견적서 사전 생성)
+- [x] Next.js `revalidate` 설정으로 Notion 데이터 캐싱 전략 수립 (ISR, 60초 적용) — `React.cache()` 래핑 + `export const revalidate = 60` 완료
+- [x] `generateStaticParams` 검토 (자주 조회되는 견적서 사전 생성) — 빌드 타임 사전 생성 완료
 - [ ] PDF 생성 API 응답 크기 최적화 (폰트 서브셋)
 - [ ] Core Web Vitals 측정 및 LCP/CLS 개선
 - [ ] Vercel Edge Config 및 환경변수 보안 검토
@@ -162,12 +162,12 @@
 - [ ] Playwright MCP E2E 테스트 — 견적서 페이지 접근 → PDF 다운로드 전체 플로우 검증
 - [ ] 모바일/태블릿 반응형 렌더링 및 브라우저 호환성 테스트
 
-### Task 4.4: 배포 및 운영 준비 — 대기
+### Task 4.4: 배포 및 운영 준비 ⚠️ — 부분 완료
 
 - [ ] Vercel 프로젝트 연결 및 환경변수 설정 (`NOTION_API_KEY`, `NOTION_DATABASE_ID`, `NOTION_ITEMS_DATABASE_ID`)
 - [ ] Vercel 커스텀 도메인 설정
 - [ ] Notion Integration 프로덕션 권한 확인 (Invoices DB, Items DB 연결)
-- [ ] `next.config.ts` 보안 헤더 설정 (`X-Frame-Options`, `Content-Security-Policy`)
+- [x] `next.config.ts` 보안 헤더 설정 (`X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`) — 완료
 - [ ] 배포 후 실제 노션 데이터로 견적서 조회 및 PDF 다운로드 E2E 검증
 
 ---
@@ -290,12 +290,12 @@
 |------|------|------|
 | Task 4.0 | 환경변수 설정 (`.env.local` 생성) | ✅ 완료 |
 | Task 4.1 | 에러 처리 및 로딩 UI 개선 | ✅ 완료 |
-| Task 4.2 | 성능 최적화 (ISR 캐싱) | ⏳ 대기 |
+| Task 4.2 | 성능 최적화 (ISR 캐싱) | ⚠️ 부분 완료 (ISR 60초, generateStaticParams 완료) |
 | Task 4.3 | 테스트 (단위/API/E2E) | ⏳ 대기 |
-| Task 4.4 | 배포 및 운영 준비 (Vercel) | ⏳ 대기 |
+| Task 4.4 | 배포 및 운영 준비 (Vercel) | ⚠️ 부분 완료 (보안 헤더 완료) |
 
 ---
 
 **PRD 참조**: docs/PRD.md
 **작성일**: 2025-10-02
-**최종 수정**: 2026-06-28 (Task 4.1 에러 처리 및 로딩 UI 개선 완료)
+**최종 수정**: 2026-06-28 (Task 4.2 ISR 캐싱·generateStaticParams 완료, Task 4.4 보안 헤더 완료)

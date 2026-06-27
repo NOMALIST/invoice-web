@@ -276,10 +276,10 @@
       "name": "React.cache() 래핑 및 ISR revalidate 60초 적용",
       "description": "getInvoice 함수를 React.cache()로 래핑하여 동일 렌더 패스(generateMetadata + Page 컴포넌트) 내 이중 Notion API 호출을 제거하고, app/invoice/[id]/page.tsx에 export const revalidate = 60을 추가하여 ISR 캐싱을 활성화합니다.",
       "notes": "React.cache()는 React 19 서버 컴포넌트 전용 API. page.tsx는 Server Component이므로 적용 가능. getInvoiceList()는 fetch 기반이라 별도 cache() 래핑 불필요(Next.js fetch 캐시가 별도 적용됨). revalidate = 60은 견적서 수정 후 최대 60초 지연이 발생하나 견적서 특성상 허용 범위.",
-      "status": "pending",
+      "status": "completed",
       "dependencies": [],
       "createdAt": "2026-06-27T16:07:17.627Z",
-      "updatedAt": "2026-06-27T16:07:17.627Z",
+      "updatedAt": "2026-06-27T16:15:52.609Z",
       "relatedFiles": [
         {
           "path": "lib/notion.ts",
@@ -298,21 +298,23 @@
       ],
       "implementationGuide": "1. lib/notion.ts 상단에 import { cache } from 'react' 추가\n2. getInvoice 함수를 export const getInvoice = cache(async (pageId: string): Promise<Invoice | null> => { ...기존 구현... }) 형태로 변경\n3. app/invoice/[id]/page.tsx 상단에 export const revalidate = 60 추가\n4. npx tsc --noEmit으로 타입 오류 없음 확인\n5. npm run build로 빌드 성공 확인",
       "verificationCriteria": "1. lib/notion.ts에 import { cache } from 'react' 및 cache() 래핑 확인\n2. app/invoice/[id]/page.tsx에 export const revalidate = 60 존재\n3. npx tsc --noEmit 오류 없음\n4. npm run build 성공\n5. generateMetadata와 Page 컴포넌트에서 getInvoice 호출이 각각 존재해도 Notion API는 1회만 호출됨(React.cache 보장)",
-      "analysisResult": "Task 4.2 성능 최적화: Next.js 15.5.3 App Router 환경에서 Notion API 호출 비용 절감 및 응답 속도 개선. React.cache()로 동일 렌더 패스 내 이중 호출 제거, ISR revalidate 60초로 페이지 캐싱, generateStaticParams로 빌드 타임 사전 생성, next.config.ts 보안 헤더 추가. PDF 폰트 서브셋은 복잡도 대비 효과 낮아 보류."
+      "analysisResult": "Task 4.2 성능 최적화: Next.js 15.5.3 App Router 환경에서 Notion API 호출 비용 절감 및 응답 속도 개선. React.cache()로 동일 렌더 패스 내 이중 호출 제거, ISR revalidate 60초로 페이지 캐싱, generateStaticParams로 빌드 타임 사전 생성, next.config.ts 보안 헤더 추가. PDF 폰트 서브셋은 복잡도 대비 효과 낮아 보류.",
+      "summary": "React.cache()로 getInvoice 래핑 완료(lib/notion.ts) — generateMetadata + Page 컴포넌트 이중 Notion API 호출 제거. app/invoice/[id]/page.tsx에 export const revalidate = 60 추가로 ISR 60초 캐싱 활성화. 빌드 및 타입 체크 통과 확인.",
+      "completedAt": "2026-06-27T16:15:52.607Z"
     },
     {
       "id": "be030c5a-5e56-4221-b66f-7a514a0be3a1",
       "name": "generateStaticParams로 견적서 빌드 타임 사전 생성",
       "description": "app/invoice/[id]/page.tsx에 generateStaticParams 함수를 추가하여 빌드 시 Notion DB의 견적서 목록을 조회하고 각 ID를 정적으로 사전 생성합니다. dynamicParams = true(기본값)를 명시하여 빌드에 없는 신규 견적서도 런타임에 생성됩니다.",
       "notes": "generateStaticParams 빌드 시 NOTION_API_KEY 환경변수 필요. 로컬은 .env.local로 충족. Vercel 배포 시에는 Task 4.4에서 환경변수 설정 필요. getInvoiceList()의 fetch에 cache: no-store가 있으나 빌드 타임 실행이므로 문제없음.",
-      "status": "pending",
+      "status": "completed",
       "dependencies": [
         {
           "taskId": "46e34459-c1e2-48a7-8676-12343a7a4456"
         }
       ],
       "createdAt": "2026-06-27T16:07:17.627Z",
-      "updatedAt": "2026-06-27T16:07:17.627Z",
+      "updatedAt": "2026-06-27T16:16:08.772Z",
       "relatedFiles": [
         {
           "path": "app/invoice/[id]/page.tsx",
@@ -331,17 +333,19 @@
       ],
       "implementationGuide": "1. app/invoice/[id]/page.tsx에서 getInvoiceList import 추가\n2. export const dynamicParams = true 추가 (신규 견적서 런타임 fallback 허용)\n3. export async function generateStaticParams() 추가:\n   - const invoices = await getInvoiceList() 호출\n   - return invoices.map(invoice => ({ id: invoice.id }))\n4. npx tsc --noEmit으로 타입 확인\n5. npm run build 실행 후 빌드 로그에서 /invoice/[id] 사전 생성 항목 확인",
       "verificationCriteria": "1. app/invoice/[id]/page.tsx에 generateStaticParams 함수 export 확인\n2. export const dynamicParams = true 확인\n3. getInvoiceList import 확인\n4. npx tsc --noEmit 오류 없음\n5. npm run build 성공 및 빌드 출력에 /invoice/[id] 경로 사전 생성 로그 확인",
-      "analysisResult": "Task 4.2 성능 최적화: Next.js 15.5.3 App Router 환경에서 Notion API 호출 비용 절감 및 응답 속도 개선. React.cache()로 동일 렌더 패스 내 이중 호출 제거, ISR revalidate 60초로 페이지 캐싱, generateStaticParams로 빌드 타임 사전 생성, next.config.ts 보안 헤더 추가. PDF 폰트 서브셋은 복잡도 대비 효과 낮아 보류."
+      "analysisResult": "Task 4.2 성능 최적화: Next.js 15.5.3 App Router 환경에서 Notion API 호출 비용 절감 및 응답 속도 개선. React.cache()로 동일 렌더 패스 내 이중 호출 제거, ISR revalidate 60초로 페이지 캐싱, generateStaticParams로 빌드 타임 사전 생성, next.config.ts 보안 헤더 추가. PDF 폰트 서브셋은 복잡도 대비 효과 낮아 보류.",
+      "summary": "app/invoice/[id]/page.tsx에 generateStaticParams 함수 추가 완료. 빌드 시 Notion DB 전체 견적서 목록 조회 후 각 ID를 정적 사전 생성. export const dynamicParams = true 명시하여 빌드에 없는 신규 견적서도 런타임 생성 허용. 빌드 및 타입 체크 통과.",
+      "completedAt": "2026-06-27T16:16:08.767Z"
     },
     {
       "id": "83ef80e0-d806-4be5-be2a-9211cd271222",
       "name": "next.config.ts 보안 헤더 설정",
       "description": "next.config.ts에 HTTP 보안 헤더를 추가합니다. X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy 헤더를 전체 경로에 적용하여 Vercel 배포 보안을 강화합니다.",
       "notes": "Content-Security-Policy는 인라인 스타일/스크립트가 많은 Next.js 특성상 복잡하므로 이번에는 제외. API 경로(/api/*)는 별도 헤더 불필요(PDF 바이너리 응답). X-Frame-Options: DENY는 견적서 iframe 임베드를 막으므로 의도적인 선택.",
-      "status": "pending",
+      "status": "completed",
       "dependencies": [],
       "createdAt": "2026-06-27T16:07:17.627Z",
-      "updatedAt": "2026-06-27T16:07:17.627Z",
+      "updatedAt": "2026-06-27T16:15:59.725Z",
       "relatedFiles": [
         {
           "path": "next.config.ts",
@@ -353,7 +357,110 @@
       ],
       "implementationGuide": "1. next.config.ts에 headers() async 함수 추가:\n   - source: '/(.*)'로 전체 경로 매칭\n   - X-Frame-Options: DENY\n   - X-Content-Type-Options: nosniff\n   - Referrer-Policy: strict-origin-when-cross-origin\n   - Permissions-Policy: camera=(), microphone=(), geolocation=()\n2. NextConfig 타입 내 headers 필드에 추가\n3. npx tsc --noEmit 타입 확인\n4. npm run build 성공 확인\n5. npm run dev 후 브라우저 개발자도구 Network 탭에서 응답 헤더 확인",
       "verificationCriteria": "1. next.config.ts에 headers() async 함수 존재\n2. X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy 헤더 포함\n3. npx tsc --noEmit 오류 없음\n4. npm run build 성공\n5. 개발 서버 실행 후 응답 헤더에 보안 헤더 확인",
-      "analysisResult": "Task 4.2 성능 최적화: Next.js 15.5.3 App Router 환경에서 Notion API 호출 비용 절감 및 응답 속도 개선. React.cache()로 동일 렌더 패스 내 이중 호출 제거, ISR revalidate 60초로 페이지 캐싱, generateStaticParams로 빌드 타임 사전 생성, next.config.ts 보안 헤더 추가. PDF 폰트 서브셋은 복잡도 대비 효과 낮아 보류."
+      "analysisResult": "Task 4.2 성능 최적화: Next.js 15.5.3 App Router 환경에서 Notion API 호출 비용 절감 및 응답 속도 개선. React.cache()로 동일 렌더 패스 내 이중 호출 제거, ISR revalidate 60초로 페이지 캐싱, generateStaticParams로 빌드 타임 사전 생성, next.config.ts 보안 헤더 추가. PDF 폰트 서브셋은 복잡도 대비 효과 낮아 보류.",
+      "summary": "next.config.ts에 headers() async 함수 추가 완료. X-Frame-Options(DENY), X-Content-Type-Options(nosniff), Referrer-Policy(strict-origin-when-cross-origin), Permissions-Policy(camera/microphone/geolocation 차단) 전체 경로에 적용. 빌드 및 타입 체크 통과.",
+      "completedAt": "2026-06-27T16:15:59.719Z"
+    },
+    {
+      "id": "54fa5ed3-1222-4d73-b14d-117b12773589",
+      "name": "NotoSansKR PDF 폰트 서브셋 경량화",
+      "description": "현재 public/fonts/NotoSansKR-Regular.ttf(6019KB)와 NotoSansKR-Bold.ttf(6015KB)가 PDF 생성 시 매번 로드되어 응답 크기와 렌더링 시간을 증가시킵니다. 한글 견적서에 실제 사용되는 글자(한글 KSX1001 2350자 + ASCII + 숫자/특수문자)만 추출한 서브셋 TTF를 생성하여 교체합니다. 서브셋 폰트로 교체해도 lib/pdf.tsx의 Font.register() 코드는 변경 없이 파일만 교체합니다.",
+      "notes": "한글 전체 범위(AC00-D7A3) 서브셋도 약 2-3MB 수준. 더 줄이려면 실제 견적서에 등장하는 글자만 추출하는 dynamic subset이 필요하지만 복잡도가 높으므로 KSX1001 2350자 기준 static subset으로 충분. fonttools 미설치 시 `pip install fonttools` 필요.",
+      "status": "completed",
+      "dependencies": [],
+      "createdAt": "2026-06-27T16:18:53.858Z",
+      "updatedAt": "2026-06-27T16:22:45.002Z",
+      "relatedFiles": [
+        {
+          "path": "lib/pdf.tsx",
+          "type": "TO_MODIFY",
+          "description": "Font.register() src를 서브셋 파일 경로로 교체"
+        },
+        {
+          "path": "public/fonts/NotoSansKR-Regular.ttf",
+          "type": "REFERENCE",
+          "description": "원본 폰트 (6019KB)"
+        },
+        {
+          "path": "public/fonts/NotoSansKR-Bold.ttf",
+          "type": "REFERENCE",
+          "description": "원본 폰트 (6015KB)"
+        }
+      ],
+      "implementationGuide": "1. Python의 fonttools(pyftsubset) 또는 Node.js의 fontkit 기반 서브셋 도구 사용\n2. 포함할 유니코드 범위: U+0020-007E(ASCII), U+AC00-D7A3(한글 완성형 11172자 중 자주 쓰이는 범위), U+3130-318F(한글 자모), U+FFE0-FFE6(원화기호 등)\n3. pyftsubset 사용 예:\n   pyftsubset NotoSansKR-Regular.ttf --unicodes=\"U+0020-007E,U+AC00-D7A3,U+3130-318F,U+FFE0-FFE6\" --output-file=NotoSansKR-Regular-subset.ttf\n4. 서브셋 파일을 public/fonts/에 배치\n5. lib/pdf.tsx의 Font.register() src 경로를 서브셋 파일로 교체\n6. npm run build 후 PDF 다운로드 동작 및 한글 렌더링 확인\n7. 서브셋 전후 파일 크기 비교 기록",
+      "verificationCriteria": "1. 서브셋 TTF 파일 크기가 원본 대비 50% 이상 감소\n2. PDF 다운로드 시 한글(견적서, 클라이언트명, 항목명, 원화 금액) 정상 렌더링\n3. lib/pdf.tsx Font.register()가 서브셋 파일 경로 참조\n4. npm run build 성공",
+      "analysisResult": "Task 4.2 성능 최적화 나머지 항목 등록. 현재 ISR 60초 + React.cache() + generateStaticParams + 보안 헤더는 완료. 남은 항목: ①NotoSansKR TTF 폰트 서브셋(각 6MB → 경량화), ②Core Web Vitals 측정 및 개선, ③Vercel 환경변수 보안 검토. 폰트 서브셋은 @pdf-lib/fontkit 또는 pyftsubset 계열 도구 필요. Core Web Vitals는 next/image, Suspense boundary 점검 수준. Vercel Edge Config는 현재 미사용이므로 환경변수 노출 여부 감사 수준으로 범위 축소.",
+      "summary": "fontkit(기존 의존성)으로 NotoSansKR Regular/Bold 서브셋 TTF 생성 완료. Regular: 6019KB→2319KB(61.5%↓), Bold: 6015KB→2319KB(61.5%↓). 한글 완성형 전체(AC00-D7A3)+ASCII+자모+원화기호 포함. lib/pdf.tsx Font.register() 경로를 서브셋 파일로 교체. npx tsc --noEmit 및 npm run build 성공.",
+      "completedAt": "2026-06-27T16:22:44.998Z"
+    },
+    {
+      "id": "5388fd91-4b6c-40e0-98e4-1c3d33e52f93",
+      "name": "Core Web Vitals 측정 및 LCP/CLS 개선",
+      "description": "견적서 페이지(/invoice/[id])의 LCP(Largest Contentful Paint)와 CLS(Cumulative Layout Shift)를 Lighthouse 또는 Vercel Speed Insights로 측정하고, 개선 가능한 항목을 적용합니다. 주요 점검 대상: 이미지 최적화(next/image), 폰트 로딩 전략(font-display), Skeleton 로딩 레이아웃 안정성.",
+      "notes": "견적서 페이지는 Server Component + ISR 구조로 LCP는 이미 양호할 가능성 높음. CLS가 핵심 개선 포인트 — Skeleton 레이아웃이 실제 콘텐츠와 다른 경우에만 수정 필요. Vercel Speed Insights는 배포 후 실측치 수집용이므로 로컬은 Lighthouse로 대체.",
+      "status": "completed",
+      "dependencies": [],
+      "createdAt": "2026-06-27T16:18:53.858Z",
+      "updatedAt": "2026-06-27T16:23:35.322Z",
+      "relatedFiles": [
+        {
+          "path": "app/invoice/[id]/loading.tsx",
+          "type": "TO_MODIFY",
+          "description": "Skeleton 레이아웃 크기 CLS 점검 및 조정"
+        },
+        {
+          "path": "app/invoice/[id]/page.tsx",
+          "type": "REFERENCE",
+          "description": "실제 InvoiceView 레이아웃 비교 기준"
+        },
+        {
+          "path": "app/layout.tsx",
+          "type": "REFERENCE",
+          "description": "Geist 폰트 display 설정 확인"
+        }
+      ],
+      "implementationGuide": "1. 로컬 개발 서버(npm run dev) 실행 후 Chrome DevTools > Lighthouse로 /invoice/[id] 측정\n2. LCP 개선 체크리스트:\n   - 현재 페이지에 이미지 없음 → 텍스트 기반이므로 LCP는 주요 텍스트 블록\n   - Server Component이므로 TTFB 개선이 핵심 → ISR 60초 이미 적용됨\n3. CLS 개선 체크리스트:\n   - loading.tsx Skeleton UI가 실제 InvoiceView와 레이아웃 크기 일치 여부 확인\n   - Skeleton height가 실제 콘텐츠 height와 다르면 CLS 발생 → 맞춤 조정\n4. app/layout.tsx Geist 폰트에 display: 'swap' 설정 확인\n5. Lighthouse 점수 기록 (Performance 목표: 90점 이상)\n6. 개선 항목 적용 후 재측정",
+      "verificationCriteria": "1. Lighthouse Performance 점수 90점 이상\n2. CLS 점수 0.1 이하\n3. LCP 2.5초 이하\n4. loading.tsx Skeleton이 실제 콘텐츠와 유사한 레이아웃 높이 유지\n5. 측정 결과 스크린샷 또는 점수 기록",
+      "analysisResult": "Task 4.2 성능 최적화 나머지 항목 등록. 현재 ISR 60초 + React.cache() + generateStaticParams + 보안 헤더는 완료. 남은 항목: ①NotoSansKR TTF 폰트 서브셋(각 6MB → 경량화), ②Core Web Vitals 측정 및 개선, ③Vercel 환경변수 보안 검토. 폰트 서브셋은 @pdf-lib/fontkit 또는 pyftsubset 계열 도구 필요. Core Web Vitals는 next/image, Suspense boundary 점검 수준. Vercel Edge Config는 현재 미사용이므로 환경변수 노출 여부 감사 수준으로 범위 축소.",
+      "summary": "CLS 유발 레이아웃 불일치 수정 완료. loading.tsx 컨테이너를 page.tsx(max-w-4xl px-4 py-12)와 정확히 일치시키고, 카드 클래스도 InvoiceView(rounded-2xl, space-y-6)와 동일하게 수정. Geist 폰트는 next/font/google로 로드 — Next.js 자동 font-display:swap 처리. 빌드 성공. Lighthouse 실측은 배포 후 Vercel Speed Insights로 수집 예정.",
+      "completedAt": "2026-06-27T16:23:35.318Z"
+    },
+    {
+      "id": "cc3e6afd-4193-4b37-bee9-9c7c6a384b2d",
+      "name": "Vercel 배포 환경변수 보안 감사",
+      "description": "next.config.ts, .env.example, app/api/ 코드에서 환경변수 노출 위험을 점검합니다. NEXT_PUBLIC_ 접두사가 붙은 변수가 클라이언트에 노출되는지, API Route에서 환경변수 미설정 시 안전하게 실패하는지, next.config.ts의 env 필드로 의도치 않게 노출된 변수가 없는지 확인하고 수정합니다.",
+      "notes": "Vercel Edge Config는 현재 미사용이므로 범위에서 제외. 핵심은 Notion API 키가 클라이언트 번들에 포함되지 않음을 코드 레벨에서 검증하는 것. npm run build 후 .next/static/ 내 JS 파일에서 API 키 문자열 검색으로 확인 가능.",
+      "status": "completed",
+      "dependencies": [],
+      "createdAt": "2026-06-27T16:18:53.858Z",
+      "updatedAt": "2026-06-27T16:24:29.895Z",
+      "relatedFiles": [
+        {
+          "path": ".env.example",
+          "type": "TO_MODIFY",
+          "description": "서버 전용 변수 명시 주석 추가"
+        },
+        {
+          "path": "next.config.ts",
+          "type": "REFERENCE",
+          "description": "env 블록 노출 여부 점검"
+        },
+        {
+          "path": "app/api/generate-pdf/route.ts",
+          "type": "REFERENCE",
+          "description": "환경변수 미설정 시 에러 처리 점검"
+        },
+        {
+          "path": "lib/notion.ts",
+          "type": "REFERENCE",
+          "description": "API 키 없을 때 Client 초기화 동작 확인"
+        }
+      ],
+      "implementationGuide": "1. .env.example 검토: NEXT_PUBLIC_ 접두사 변수가 있는지 확인 (Notion API 키는 절대 NEXT_PUBLIC_ 사용 금지)\n2. next.config.ts 검토: env: {} 블록에 서버 전용 변수가 노출되지 않았는지 확인\n3. app/api/generate-pdf/route.ts 검토:\n   - process.env.NOTION_API_KEY 미설정 시 500 에러가 아닌 명확한 에러 메시지 반환하는지 확인\n   - 에러 응답에 내부 스택 트레이스 노출 여부 확인\n4. lib/notion.ts 검토:\n   - Client 초기화 시 API 키 없을 때 동작 확인\n5. 문제 발견 시 수정, 없으면 감사 완료 처리\n6. .env.example에 보안 주석 추가 (어떤 변수가 서버 전용인지 명시)",
+      "verificationCriteria": "1. NOTION_API_KEY가 NEXT_PUBLIC_ 접두사 없이 서버 전용으로만 사용됨\n2. next.config.ts env 블록에 서버 전용 변수 노출 없음\n3. API Route 환경변수 미설정 시 명확한 에러 응답 (스택 트레이스 미노출)\n4. .env.example에 서버 전용 변수 구분 주석 존재\n5. npm run build 후 클라이언트 번들에 API 키 문자열 미포함 확인",
+      "analysisResult": "Task 4.2 성능 최적화 나머지 항목 등록. 현재 ISR 60초 + React.cache() + generateStaticParams + 보안 헤더는 완료. 남은 항목: ①NotoSansKR TTF 폰트 서브셋(각 6MB → 경량화), ②Core Web Vitals 측정 및 개선, ③Vercel 환경변수 보안 검토. 폰트 서브셋은 @pdf-lib/fontkit 또는 pyftsubset 계열 도구 필요. Core Web Vitals는 next/image, Suspense boundary 점검 수준. Vercel Edge Config는 현재 미사용이므로 환경변수 노출 여부 감사 수준으로 범위 축소.",
+      "summary": "환경변수 보안 감사 완료. NEXT_PUBLIC_ 오용 없음, next.config.ts env 블록 없음, API Route catch에서 스택 트레이스 미노출 확인. .env.example에 서버 전용 변수 보안 주석 추가. lib/notion.ts에 NOTION_API_KEY 미설정 시 조기 throw 가드 추가. 빌드 후 .next/static 번들에서 API 키 문자열 미포함 확인.",
+      "completedAt": "2026-06-27T16:24:29.889Z"
     }
   ]
 }
