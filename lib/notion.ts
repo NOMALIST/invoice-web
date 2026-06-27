@@ -1,5 +1,6 @@
 // Notion API 클라이언트 초기화 및 견적서 헬퍼 함수
 
+import { cache } from "react";
 import { Client } from "@notionhq/client";
 import { APIResponseError, APIErrorCode, RequestTimeoutError } from "@notionhq/client";
 import type { Invoice, InvoiceItem, InvoiceListItem } from "@/types/invoice";
@@ -61,8 +62,9 @@ export async function getInvoiceList(): Promise<InvoiceListItem[]> {
 /**
  * 노션 페이지 ID로 견적서 단일 조회
  * Invoices DB 페이지와 연결된 Items DB 항목을 함께 가져옵니다
+ * React cache()로 래핑하여 동일 렌더 패스에서 중복 Notion API 호출 방지
  */
-export async function getInvoice(pageId: string): Promise<Invoice | null> {
+export const getInvoice = cache(async (pageId: string): Promise<Invoice | null> => {
   try {
     // 견적서 페이지 조회
     const page = await notion.pages.retrieve({ page_id: pageId });
@@ -108,7 +110,7 @@ export async function getInvoice(pageId: string): Promise<Invoice | null> {
     // 알 수 없는 네트워크/런타임 오류
     throw error;
   }
-}
+});
 
 // -------------------------------------------
 // 내부 변환 헬퍼 함수

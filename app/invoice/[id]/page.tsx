@@ -4,11 +4,22 @@
 
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getInvoice } from "@/lib/notion";
+import { getInvoice, getInvoiceList } from "@/lib/notion";
 import { InvoiceView } from "@/components/invoice/InvoiceView";
+
+// 60초마다 ISR 재검증
+export const revalidate = 60;
+// 빌드 타임에 생성되지 않은 경로도 동적으로 허용
+export const dynamicParams = true;
 
 interface PageProps {
   params: Promise<{ id: string }>;
+}
+
+// 빌드 타임에 Notion DB 견적서 목록을 조회하여 정적 경로 사전 생성
+export async function generateStaticParams() {
+  const invoices = await getInvoiceList();
+  return invoices.map((invoice) => ({ id: invoice.id }));
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
