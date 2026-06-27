@@ -1,6 +1,3 @@
-// 견적서 항목 테이블 컴포넌트
-// 견적 항목(설명, 수량, 단가, 금액)과 합계를 표 형식으로 표시합니다
-
 import {
   Table,
   TableBody,
@@ -15,7 +12,6 @@ interface InvoiceTableProps {
   invoice: Invoice;
 }
 
-/** 숫자를 한국 원화 형식으로 포맷 */
 function formatKRW(amount: number): string {
   return amount.toLocaleString("ko-KR") + "원";
 }
@@ -23,49 +19,52 @@ function formatKRW(amount: number): string {
 export function InvoiceTable({ invoice }: InvoiceTableProps) {
   return (
     <div className="space-y-4">
-      <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+      <p className="text-xs font-medium text-muted-foreground uppercase tracking-widest">
         견적 내역
-      </h2>
+      </p>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[50%]">항목</TableHead>
-            <TableHead className="text-right">수량</TableHead>
-            <TableHead className="text-right">단가</TableHead>
-            <TableHead className="text-right">금액</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {invoice.items.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                견적 항목이 없습니다.
-              </TableCell>
+      <div className="rounded-xl border border-border overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50 hover:bg-muted/50">
+              <TableHead className="w-[50%] font-semibold text-foreground">항목</TableHead>
+              <TableHead className="text-right font-semibold text-foreground">수량</TableHead>
+              <TableHead className="text-right font-semibold text-foreground">단가</TableHead>
+              <TableHead className="text-right font-semibold text-foreground">금액</TableHead>
             </TableRow>
-          ) : (
-            invoice.items.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell className="font-medium">{item.description}</TableCell>
-                <TableCell className="text-right">{item.quantity}</TableCell>
-                <TableCell className="text-right">{formatKRW(item.unitPrice)}</TableCell>
-                <TableCell className="text-right">{formatKRW(item.amount)}</TableCell>
+          </TableHeader>
+          <TableBody>
+            {invoice.items.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center text-muted-foreground py-10">
+                  견적 항목이 없습니다.
+                </TableCell>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+            ) : (
+              invoice.items.map((item) => (
+                <TableRow key={item.id} className="hover:bg-muted/30">
+                  <TableCell className="font-medium">{item.description}</TableCell>
+                  <TableCell className="text-right tabular-nums">{item.quantity}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatKRW(item.unitPrice)}</TableCell>
+                  <TableCell className="text-right tabular-nums">{formatKRW(item.amount)}</TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
       {/* 합계 영역 */}
-      <div className="flex justify-end border-t border-border pt-4">
-        <div className="space-y-1 text-right">
-          <div className="flex items-center gap-8">
-            <span className="text-sm text-muted-foreground">소계</span>
-            <span className="text-sm font-medium">{formatKRW(invoice.totalAmount)}</span>
+      <div className="flex justify-end pt-2">
+        <div className="w-full sm:w-72 space-y-2 rounded-xl bg-muted/50 border border-border p-4">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">소계</span>
+            <span className="font-medium tabular-nums">{formatKRW(invoice.totalAmount)}</span>
           </div>
-          <div className="flex items-center gap-8 pt-2 border-t border-border">
-            <span className="text-base font-semibold">합계</span>
-            <span className="text-base font-bold">{formatKRW(invoice.totalAmount)}</span>
+          <div className="h-px bg-border" />
+          <div className="flex items-center justify-between">
+            <span className="font-semibold">합계</span>
+            <span className="text-lg font-bold tabular-nums">{formatKRW(invoice.totalAmount)}</span>
           </div>
         </div>
       </div>

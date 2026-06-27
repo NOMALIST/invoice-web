@@ -8,7 +8,7 @@ import { FileText } from "lucide-react";
 export function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="mx-auto flex h-14 max-w-screen-2xl items-center px-4">
+      <div className="mx-auto flex h-14 max-w-4xl items-center px-4 w-full">
         {/* 로고 */}
         <div className="flex items-center flex-1">
           <Link href="/" className="flex items-center gap-2 font-bold text-lg">

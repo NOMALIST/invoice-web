@@ -1,6 +1,3 @@
-// 견적서 전체 뷰 컴포넌트
-// 견적서 헤더, 항목 테이블, PDF 다운로드 버튼을 조합합니다
-
 import type { Invoice } from "@/types/invoice";
 import { InvoiceHeader } from "./InvoiceHeader";
 import { InvoiceTable } from "./InvoiceTable";
@@ -12,11 +9,11 @@ interface InvoiceViewProps {
 
 export function InvoiceView({ invoice }: InvoiceViewProps) {
   return (
-    <div className="max-w-3xl mx-auto space-y-8">
+    <div className="space-y-6">
       {/* 인쇄/PDF용 견적서 영역 */}
       <div
         id="invoice-content"
-        className="rounded-lg border border-border bg-card text-card-foreground shadow-sm p-8 space-y-8"
+        className="rounded-2xl border border-border bg-card text-card-foreground shadow-sm p-8 space-y-8"
       >
         <InvoiceHeader invoice={invoice} />
         <InvoiceTable invoice={invoice} />

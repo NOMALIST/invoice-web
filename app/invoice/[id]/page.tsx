@@ -35,7 +35,7 @@ export default async function InvoicePage({ params }: PageProps) {
   }
 
   return (
-    <div className="mx-auto max-w-screen-2xl px-4 py-10 w-full">
+    <div className="mx-auto max-w-4xl px-4 py-12 w-full">
       <InvoiceView invoice={invoice} />
     </div>
   );

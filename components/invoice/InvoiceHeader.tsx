@@ -1,8 +1,6 @@
-// 견적서 헤더 컴포넌트
-// 견적서 번호, 발행일, 유효기간, 클라이언트 정보, 상태 배지를 표시합니다
-
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
+import { Clock, CheckCircle2, XCircle, Calendar, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { Invoice, InvoiceStatus } from "@/types/invoice";
@@ -11,62 +9,78 @@ interface InvoiceHeaderProps {
   invoice: Invoice;
 }
 
-/** 상태별 배지 스타일 매핑 */
-const statusVariantMap: Record<InvoiceStatus, "default" | "secondary" | "destructive"> = {
-  대기: "secondary",
-  승인: "default",
-  거절: "destructive",
+const statusConfig: Record<
+  InvoiceStatus,
+  {
+    variant: "default" | "secondary" | "destructive";
+    icon: React.ComponentType<{ className?: string }>;
+    color: string;
+  }
+> = {
+  대기: { variant: "secondary", icon: Clock, color: "text-amber-500" },
+  승인: { variant: "default", icon: CheckCircle2, color: "text-emerald-500" },
+  거절: { variant: "destructive", icon: XCircle, color: "text-red-500" },
 };
 
-/** 날짜 문자열을 한국어 형식으로 포맷 */
 function formatDate(dateStr: string): string {
   if (!dateStr) return "-";
   return format(new Date(dateStr), "yyyy년 MM월 dd일", { locale: ko });
 }
 
 export function InvoiceHeader({ invoice }: InvoiceHeaderProps) {
+  const { variant, icon: StatusIcon, color } = statusConfig[invoice.status];
+
   return (
     <div className="space-y-6">
       {/* 상단: 제목 + 상태 */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">견적서</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            No. {invoice.invoiceNumber}
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-widest mb-1">
+            견적서
           </p>
+          <h1 className="text-2xl font-bold tracking-tight">
+            No. {invoice.invoiceNumber}
+          </h1>
         </div>
         <Badge
-          variant={statusVariantMap[invoice.status]}
-          className={cn("text-sm px-3 py-1")}
+          variant={variant}
+          className={cn("gap-1.5 px-3 py-1 text-sm font-medium")}
         >
+          <StatusIcon className={cn("h-3.5 w-3.5", color)} />
           {invoice.status}
         </Badge>
       </div>
 
+      {/* 구분선 */}
+      <div className="h-px bg-border" />
+
       {/* 정보 그리드 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2 border-t border-border/60">
-        {/* 수신자 정보 */}
-        <div className="space-y-1">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        {/* 수신자 */}
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            <User className="h-3 w-3" />
             수신
-          </p>
-          <p className="text-lg font-semibold">{invoice.clientName}</p>
+          </div>
+          <p className="text-base font-semibold">{invoice.clientName}</p>
         </div>
 
-        {/* 날짜 정보 */}
-        <div className="space-y-3">
-          <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              발행일
-            </p>
-            <p className="text-sm font-medium">{formatDate(invoice.issueDate)}</p>
+        {/* 발행일 */}
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            <Calendar className="h-3 w-3" />
+            발행일
           </div>
-          <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              유효기간
-            </p>
-            <p className="text-sm font-medium">{formatDate(invoice.validUntil)}</p>
+          <p className="text-base font-medium">{formatDate(invoice.issueDate)}</p>
+        </div>
+
+        {/* 유효기간 */}
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            <Calendar className="h-3 w-3" />
+            유효기간
           </div>
+          <p className="text-base font-medium">{formatDate(invoice.validUntil)}</p>
         </div>
       </div>
     </div>

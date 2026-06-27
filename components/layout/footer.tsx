@@ -6,7 +6,7 @@ export function Footer() {
 
   return (
     <footer className="border-t border-border/40">
-      <div className="mx-auto flex h-14 items-center justify-center max-w-screen-2xl px-4">
+      <div className="mx-auto flex h-14 items-center justify-center max-w-4xl px-4 w-full">
         <p className="text-xs text-muted-foreground">
           © {currentYear} 견적서 시스템. All rights reserved.
         </p>

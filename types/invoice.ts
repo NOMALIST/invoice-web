@@ -13,6 +13,16 @@ export interface InvoiceItem {
 /** 견적서 상태 */
 export type InvoiceStatus = '대기' | '승인' | '거절'
 
+/** 견적서 목록 아이템 (items 미포함, 랜딩 페이지용) */
+export interface InvoiceListItem {
+  id: string
+  invoiceNumber: string
+  clientName: string
+  issueDate: string
+  status: InvoiceStatus
+  totalAmount: number
+}
+
 /** 견적서 (Invoices DB) */
 export interface Invoice {
   id: string

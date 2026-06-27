@@ -1,26 +1,99 @@
-// 견적서 시스템 홈 페이지
-// 서비스 소개와 견적서 조회 안내를 제공합니다
+import Link from "next/link";
+import { FileText, Calendar, ArrowRight, Clock, CheckCircle2, XCircle } from "lucide-react";
+import { format } from "date-fns";
+import { ko } from "date-fns/locale";
+import { getInvoiceList } from "@/lib/notion";
+import { Badge } from "@/components/ui/badge";
+import type { InvoiceStatus } from "@/types/invoice";
 
-import { FileText } from "lucide-react";
+const statusConfig: Record<InvoiceStatus, { label: string; variant: "default" | "secondary" | "destructive"; icon: React.ComponentType<{ className?: string }> }> = {
+  대기: { label: "대기", variant: "secondary", icon: Clock },
+  승인: { label: "승인", variant: "default", icon: CheckCircle2 },
+  거절: { label: "거절", variant: "destructive", icon: XCircle },
+};
 
-export default function HomePage() {
+function formatDate(dateStr: string) {
+  if (!dateStr) return "-";
+  return format(new Date(dateStr), "yyyy. MM. dd", { locale: ko });
+}
+
+function formatKRW(amount: number) {
+  return amount.toLocaleString("ko-KR") + "원";
+}
+
+export default async function HomePage() {
+  const invoices = await getInvoiceList();
+
   return (
-    <section className="mx-auto max-w-screen-2xl px-4 py-20 md:py-32 w-full">
-      <div className="flex flex-col items-center text-center space-y-6 max-w-xl mx-auto">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-          <FileText className="h-8 w-8 text-primary" />
+    <div className="mx-auto max-w-4xl px-4 py-12 w-full space-y-12">
+      {/* 히어로 섹션 */}
+      <section className="text-center space-y-4 py-8">
+        <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 mb-2">
+          <FileText className="h-7 w-7 text-primary" />
         </div>
         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
           견적서 조회 서비스
         </h1>
-        <p className="text-muted-foreground">
-          발행자로부터 전달받은 견적서 링크를 통해 견적서를 확인하고
-          PDF로 다운로드하실 수 있습니다.
+        <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
+          발행된 견적서를 확인하고 PDF로 다운로드하실 수 있습니다.
         </p>
-        <p className="text-sm text-muted-foreground/70">
-          견적서 링크가 없으시면 발행자에게 문의해 주세요.
-        </p>
-      </div>
-    </section>
+      </section>
+
+      {/* 견적서 목록 */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">최근 견적서</h2>
+          <span className="text-sm text-muted-foreground">{invoices.length}건</span>
+        </div>
+
+        {invoices.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-border bg-muted/30 py-20 text-center">
+            <FileText className="mx-auto h-10 w-10 text-muted-foreground/40 mb-3" />
+            <p className="text-sm text-muted-foreground">등록된 견적서가 없습니다.</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-border rounded-xl border border-border overflow-hidden bg-card">
+            {invoices.map((invoice) => {
+              const { variant, icon: StatusIcon } = statusConfig[invoice.status];
+              return (
+                <Link
+                  key={invoice.id}
+                  href={`/invoice/${invoice.id}`}
+                  className="flex items-center gap-4 px-5 py-4 hover:bg-muted/50 transition-colors group"
+                >
+                  {/* 번호 */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-sm font-semibold truncate">
+                        No. {invoice.invoiceNumber}
+                      </span>
+                      <Badge variant={variant} className="text-xs gap-1 px-2 py-0.5 shrink-0">
+                        <StatusIcon className="h-3 w-3" />
+                        {invoice.status}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground truncate">{invoice.clientName}</p>
+                  </div>
+
+                  {/* 날짜 */}
+                  <div className="hidden sm:flex items-center gap-1.5 text-sm text-muted-foreground shrink-0">
+                    <Calendar className="h-3.5 w-3.5" />
+                    <span>{formatDate(invoice.issueDate)}</span>
+                  </div>
+
+                  {/* 금액 */}
+                  <div className="text-sm font-semibold shrink-0 tabular-nums">
+                    {formatKRW(invoice.totalAmount)}
+                  </div>
+
+                  {/* 화살표 */}
+                  <ArrowRight className="h-4 w-4 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors shrink-0" />
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </section>
+    </div>
   );
 }
