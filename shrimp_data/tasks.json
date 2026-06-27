@@ -270,6 +270,90 @@
       "analysisResult": "@react-pdf/renderer에서 한글 텍스트가 깨지는 원인은 Helvetica 폰트가 한글 유니코드를 지원하지 않기 때문입니다. NotoSansKR TTF 파일을 public/fonts/에 배치하고 Font.register()로 등록한 뒤 lib/pdf.tsx의 fontFamily를 전면 교체하여 해결합니다.",
       "summary": "lib/pdf.tsx 수정 완료. Font.register()로 NotoSansKR Regular/Bold 등록, 모든 fontFamily를 NotoSansKR로 교체, Helvetica-Bold는 fontWeight: bold 방식으로 교체. npx tsc --noEmit 타입 에러 없음. PDF API 호출 시 HTTP 200 응답 및 12KB PDF 정상 생성 확인.",
       "completedAt": "2026-06-27T15:54:27.548Z"
+    },
+    {
+      "id": "46e34459-c1e2-48a7-8676-12343a7a4456",
+      "name": "React.cache() 래핑 및 ISR revalidate 60초 적용",
+      "description": "getInvoice 함수를 React.cache()로 래핑하여 동일 렌더 패스(generateMetadata + Page 컴포넌트) 내 이중 Notion API 호출을 제거하고, app/invoice/[id]/page.tsx에 export const revalidate = 60을 추가하여 ISR 캐싱을 활성화합니다.",
+      "notes": "React.cache()는 React 19 서버 컴포넌트 전용 API. page.tsx는 Server Component이므로 적용 가능. getInvoiceList()는 fetch 기반이라 별도 cache() 래핑 불필요(Next.js fetch 캐시가 별도 적용됨). revalidate = 60은 견적서 수정 후 최대 60초 지연이 발생하나 견적서 특성상 허용 범위.",
+      "status": "pending",
+      "dependencies": [],
+      "createdAt": "2026-06-27T16:07:17.627Z",
+      "updatedAt": "2026-06-27T16:07:17.627Z",
+      "relatedFiles": [
+        {
+          "path": "lib/notion.ts",
+          "type": "TO_MODIFY",
+          "description": "getInvoice를 React.cache()로 래핑",
+          "lineStart": 1,
+          "lineEnd": 15
+        },
+        {
+          "path": "app/invoice/[id]/page.tsx",
+          "type": "TO_MODIFY",
+          "description": "revalidate = 60 export 추가",
+          "lineStart": 1,
+          "lineEnd": 10
+        }
+      ],
+      "implementationGuide": "1. lib/notion.ts 상단에 import { cache } from 'react' 추가\n2. getInvoice 함수를 export const getInvoice = cache(async (pageId: string): Promise<Invoice | null> => { ...기존 구현... }) 형태로 변경\n3. app/invoice/[id]/page.tsx 상단에 export const revalidate = 60 추가\n4. npx tsc --noEmit으로 타입 오류 없음 확인\n5. npm run build로 빌드 성공 확인",
+      "verificationCriteria": "1. lib/notion.ts에 import { cache } from 'react' 및 cache() 래핑 확인\n2. app/invoice/[id]/page.tsx에 export const revalidate = 60 존재\n3. npx tsc --noEmit 오류 없음\n4. npm run build 성공\n5. generateMetadata와 Page 컴포넌트에서 getInvoice 호출이 각각 존재해도 Notion API는 1회만 호출됨(React.cache 보장)",
+      "analysisResult": "Task 4.2 성능 최적화: Next.js 15.5.3 App Router 환경에서 Notion API 호출 비용 절감 및 응답 속도 개선. React.cache()로 동일 렌더 패스 내 이중 호출 제거, ISR revalidate 60초로 페이지 캐싱, generateStaticParams로 빌드 타임 사전 생성, next.config.ts 보안 헤더 추가. PDF 폰트 서브셋은 복잡도 대비 효과 낮아 보류."
+    },
+    {
+      "id": "be030c5a-5e56-4221-b66f-7a514a0be3a1",
+      "name": "generateStaticParams로 견적서 빌드 타임 사전 생성",
+      "description": "app/invoice/[id]/page.tsx에 generateStaticParams 함수를 추가하여 빌드 시 Notion DB의 견적서 목록을 조회하고 각 ID를 정적으로 사전 생성합니다. dynamicParams = true(기본값)를 명시하여 빌드에 없는 신규 견적서도 런타임에 생성됩니다.",
+      "notes": "generateStaticParams 빌드 시 NOTION_API_KEY 환경변수 필요. 로컬은 .env.local로 충족. Vercel 배포 시에는 Task 4.4에서 환경변수 설정 필요. getInvoiceList()의 fetch에 cache: no-store가 있으나 빌드 타임 실행이므로 문제없음.",
+      "status": "pending",
+      "dependencies": [
+        {
+          "taskId": "46e34459-c1e2-48a7-8676-12343a7a4456"
+        }
+      ],
+      "createdAt": "2026-06-27T16:07:17.627Z",
+      "updatedAt": "2026-06-27T16:07:17.627Z",
+      "relatedFiles": [
+        {
+          "path": "app/invoice/[id]/page.tsx",
+          "type": "TO_MODIFY",
+          "description": "generateStaticParams 및 dynamicParams 추가",
+          "lineStart": 1,
+          "lineEnd": 43
+        },
+        {
+          "path": "lib/notion.ts",
+          "type": "REFERENCE",
+          "description": "getInvoiceList 함수 참조",
+          "lineStart": 20,
+          "lineEnd": 59
+        }
+      ],
+      "implementationGuide": "1. app/invoice/[id]/page.tsx에서 getInvoiceList import 추가\n2. export const dynamicParams = true 추가 (신규 견적서 런타임 fallback 허용)\n3. export async function generateStaticParams() 추가:\n   - const invoices = await getInvoiceList() 호출\n   - return invoices.map(invoice => ({ id: invoice.id }))\n4. npx tsc --noEmit으로 타입 확인\n5. npm run build 실행 후 빌드 로그에서 /invoice/[id] 사전 생성 항목 확인",
+      "verificationCriteria": "1. app/invoice/[id]/page.tsx에 generateStaticParams 함수 export 확인\n2. export const dynamicParams = true 확인\n3. getInvoiceList import 확인\n4. npx tsc --noEmit 오류 없음\n5. npm run build 성공 및 빌드 출력에 /invoice/[id] 경로 사전 생성 로그 확인",
+      "analysisResult": "Task 4.2 성능 최적화: Next.js 15.5.3 App Router 환경에서 Notion API 호출 비용 절감 및 응답 속도 개선. React.cache()로 동일 렌더 패스 내 이중 호출 제거, ISR revalidate 60초로 페이지 캐싱, generateStaticParams로 빌드 타임 사전 생성, next.config.ts 보안 헤더 추가. PDF 폰트 서브셋은 복잡도 대비 효과 낮아 보류."
+    },
+    {
+      "id": "83ef80e0-d806-4be5-be2a-9211cd271222",
+      "name": "next.config.ts 보안 헤더 설정",
+      "description": "next.config.ts에 HTTP 보안 헤더를 추가합니다. X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy 헤더를 전체 경로에 적용하여 Vercel 배포 보안을 강화합니다.",
+      "notes": "Content-Security-Policy는 인라인 스타일/스크립트가 많은 Next.js 특성상 복잡하므로 이번에는 제외. API 경로(/api/*)는 별도 헤더 불필요(PDF 바이너리 응답). X-Frame-Options: DENY는 견적서 iframe 임베드를 막으므로 의도적인 선택.",
+      "status": "pending",
+      "dependencies": [],
+      "createdAt": "2026-06-27T16:07:17.627Z",
+      "updatedAt": "2026-06-27T16:07:17.627Z",
+      "relatedFiles": [
+        {
+          "path": "next.config.ts",
+          "type": "TO_MODIFY",
+          "description": "보안 헤더 headers() 함수 추가",
+          "lineStart": 1,
+          "lineEnd": 8
+        }
+      ],
+      "implementationGuide": "1. next.config.ts에 headers() async 함수 추가:\n   - source: '/(.*)'로 전체 경로 매칭\n   - X-Frame-Options: DENY\n   - X-Content-Type-Options: nosniff\n   - Referrer-Policy: strict-origin-when-cross-origin\n   - Permissions-Policy: camera=(), microphone=(), geolocation=()\n2. NextConfig 타입 내 headers 필드에 추가\n3. npx tsc --noEmit 타입 확인\n4. npm run build 성공 확인\n5. npm run dev 후 브라우저 개발자도구 Network 탭에서 응답 헤더 확인",
+      "verificationCriteria": "1. next.config.ts에 headers() async 함수 존재\n2. X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy 헤더 포함\n3. npx tsc --noEmit 오류 없음\n4. npm run build 성공\n5. 개발 서버 실행 후 응답 헤더에 보안 헤더 확인",
+      "analysisResult": "Task 4.2 성능 최적화: Next.js 15.5.3 App Router 환경에서 Notion API 호출 비용 절감 및 응답 속도 개선. React.cache()로 동일 렌더 패스 내 이중 호출 제거, ISR revalidate 60초로 페이지 캐싱, generateStaticParams로 빌드 타임 사전 생성, next.config.ts 보안 헤더 추가. PDF 폰트 서브셋은 복잡도 대비 효과 낮아 보류."
     }
   ]
 }
