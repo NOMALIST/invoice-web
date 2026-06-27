@@ -1,0 +1,198 @@
+{
+  "tasks": [
+    {
+      "id": "27eb61c6-e8c7-4c6a-9c65-d1e65897c42e",
+      "name": "shadcn skeleton, sonner 컴포넌트 설치 및 Toaster 레이아웃 적용",
+      "description": "shadcn CLI로 skeleton과 sonner 컴포넌트를 설치하고, sonner의 Toaster를 루트 레이아웃에 배치하여 전역 toast 사용을 가능하게 합니다.",
+      "status": "pending",
+      "dependencies": [],
+      "createdAt": "2026-06-27T07:45:20.563Z",
+      "updatedAt": "2026-06-27T07:45:20.563Z",
+      "relatedFiles": [
+        {
+          "path": "app/layout.tsx",
+          "type": "TO_MODIFY",
+          "description": "Toaster 컴포넌트 추가",
+          "lineStart": 1,
+          "lineEnd": 50
+        },
+        {
+          "path": "components/ui/skeleton.tsx",
+          "type": "CREATE",
+          "description": "shadcn CLI가 생성하는 Skeleton 컴포넌트"
+        },
+        {
+          "path": "components/ui/sonner.tsx",
+          "type": "CREATE",
+          "description": "shadcn CLI가 생성하는 sonner Toaster 래퍼"
+        }
+      ],
+      "implementationGuide": "1. 터미널에서 `npx shadcn@latest add skeleton sonner` 실행\n2. components/ui/skeleton.tsx, components/ui/sonner.tsx 생성 확인\n3. app/layout.tsx 수정:\n   - `import { Toaster } from '@/components/ui/sonner'` 추가\n   - ThemeProvider 내부, Footer 다음에 `<Toaster richColors />` 배치\n   - theme prop 연동은 sonner의 Toaster가 next-themes와 자동 연동되므로 별도 설정 불필요",
+      "verificationCriteria": "1. components/ui/skeleton.tsx 파일 존재\n2. components/ui/sonner.tsx 파일 존재\n3. app/layout.tsx에 Toaster import 및 렌더링 확인\n4. npm run dev 실행 시 에러 없음",
+      "analysisResult": "Phase 4 Task 4.1 — 견적서 시스템 에러 처리 및 로딩 UI 개선. 핵심 목표: (1) Notion API 조회 중 로딩 스켈레톤 UI 표시, (2) API 오류 시 에러 바운더리 페이지 표시, (3) PDF 다운로드 실패 시 alert 대신 sonner toast 표시, (4) getInvoice에 15초 타임아웃 + 에러 타입 분류 적용. 사전 작업: shadcn CLI로 skeleton, sonner 컴포넌트 설치 필요."
+    },
+    {
+      "id": "1e2541dd-284f-4d9c-9a46-d2ec647cd2b3",
+      "name": "lib/notion.ts getInvoice 타임아웃 및 에러 타입 분류 개선",
+      "description": "getInvoice 함수에 15초 타임아웃을 추가하고, @notionhq/client의 APIResponseError를 활용하여 404/권한오류/네트워크오류를 분류합니다. 반환 타입(Promise<Invoice | null>)은 변경하지 않아 호출 측 코드 변경이 불필요합니다.",
+      "status": "pending",
+      "dependencies": [],
+      "createdAt": "2026-06-27T07:45:20.563Z",
+      "updatedAt": "2026-06-27T07:45:20.563Z",
+      "relatedFiles": [
+        {
+          "path": "lib/notion.ts",
+          "type": "TO_MODIFY",
+          "description": "getInvoice 함수 에러 처리 개선",
+          "lineStart": 169,
+          "lineEnd": 199
+        }
+      ],
+      "implementationGuide": "1. lib/notion.ts 상단에 `import { APIResponseError } from '@notionhq/client'` 추가\n2. getInvoice 함수 내부 수정:\n   - 타임아웃 Promise 생성: `new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), 15000))`\n   - 실제 조회 Promise: 기존 notion.pages.retrieve 로직\n   - `await Promise.race([invoicePromise, timeoutPromise])` 패턴 적용\n3. catch 블록 에러 타입 분류:\n   - `error instanceof APIResponseError && error.status === 404` → console.warn + return null\n   - `error instanceof APIResponseError && (error.status === 401 || error.status === 403)` → console.warn + return null\n   - `error instanceof Error && error.message === 'TIMEOUT'` → console.warn('Notion API 타임아웃') + return null\n   - 그 외 → console.error(error) + return null",
+      "verificationCriteria": "1. lib/notion.ts에 APIResponseError import 확인\n2. getInvoice 함수 내 Promise.race 패턴 확인\n3. catch 블록에 에러 타입별 분기 확인\n4. TypeScript 타입 에러 없음 (npx tsc --noEmit)\n5. 반환 타입 Promise<Invoice | null> 유지",
+      "analysisResult": "Phase 4 Task 4.1 — 견적서 시스템 에러 처리 및 로딩 UI 개선. 핵심 목표: (1) Notion API 조회 중 로딩 스켈레톤 UI 표시, (2) API 오류 시 에러 바운더리 페이지 표시, (3) PDF 다운로드 실패 시 alert 대신 sonner toast 표시, (4) getInvoice에 15초 타임아웃 + 에러 타입 분류 적용. 사전 작업: shadcn CLI로 skeleton, sonner 컴포넌트 설치 필요."
+    },
+    {
+      "id": "ada133a9-c36d-4edf-9888-81dfbc9ea9d1",
+      "name": "app/invoice/[id]/loading.tsx 스켈레톤 로딩 UI 구현",
+      "description": "견적서 조회 중 표시되는 스켈레톤 로딩 UI를 InvoiceView와 동일한 레이아웃 구조로 구현합니다. Next.js App Router의 loading.tsx 규격에 따라 Server Component로 작성합니다.",
+      "status": "pending",
+      "dependencies": [
+        {
+          "taskId": "27eb61c6-e8c7-4c6a-9c65-d1e65897c42e"
+        }
+      ],
+      "createdAt": "2026-06-27T07:45:20.563Z",
+      "updatedAt": "2026-06-27T07:45:20.563Z",
+      "relatedFiles": [
+        {
+          "path": "app/invoice/[id]/loading.tsx",
+          "type": "CREATE",
+          "description": "스켈레톤 로딩 UI 신규 생성"
+        },
+        {
+          "path": "components/invoice/InvoiceView.tsx",
+          "type": "REFERENCE",
+          "description": "레이아웃 구조 참조",
+          "lineStart": 1,
+          "lineEnd": 32
+        },
+        {
+          "path": "components/invoice/InvoiceHeader.tsx",
+          "type": "REFERENCE",
+          "description": "헤더 구조 참조",
+          "lineStart": 27,
+          "lineEnd": 74
+        },
+        {
+          "path": "components/ui/skeleton.tsx",
+          "type": "DEPENDENCY",
+          "description": "Skeleton 컴포넌트"
+        }
+      ],
+      "implementationGuide": "InvoiceView의 구조를 그대로 Skeleton으로 대체:\n```\nmax-w-3xl mx-auto space-y-8\n  카드(rounded-lg border border-border bg-card p-8 space-y-8):\n    헤더 영역(space-y-6):\n      flex justify-between: Skeleton h-8 w-32 + Skeleton h-6 w-16\n      grid grid-cols-2 gap-6: 각 셀에 Skeleton h-4 w-20 + Skeleton h-6 w-40\n    구분선(border-t)\n    테이블 영역(space-y-4):\n      Skeleton h-4 w-24 (제목)\n      테이블 헤더 Skeleton 1행\n      테이블 바디 Skeleton 3행\n  다운로드 버튼 영역: Skeleton h-11 w-36 (print:hidden)\n```\n- `import { Skeleton } from '@/components/ui/skeleton'` 사용\n- 'use client' 지시어 불필요 (Server Component)",
+      "verificationCriteria": "1. app/invoice/[id]/loading.tsx 파일 생성 확인\n2. 'use client' 지시어 없음 (Server Component)\n3. InvoiceView와 동일한 max-w-3xl, 카드, 헤더, 테이블 구조\n4. npm run dev 후 네트워크 느린 환경에서 스켈레톤 표시 확인",
+      "analysisResult": "Phase 4 Task 4.1 — 견적서 시스템 에러 처리 및 로딩 UI 개선. 핵심 목표: (1) Notion API 조회 중 로딩 스켈레톤 UI 표시, (2) API 오류 시 에러 바운더리 페이지 표시, (3) PDF 다운로드 실패 시 alert 대신 sonner toast 표시, (4) getInvoice에 15초 타임아웃 + 에러 타입 분류 적용. 사전 작업: shadcn CLI로 skeleton, sonner 컴포넌트 설치 필요."
+    },
+    {
+      "id": "668d3479-3cf7-4967-b3bc-4e9865779856",
+      "name": "app/invoice/[id]/error.tsx 에러 바운더리 구현",
+      "description": "Notion API 오류 발생 시 표시되는 에러 바운더리 페이지를 Next.js App Router 규격에 맞게 구현합니다. '다시 시도' 버튼으로 reset() 호출이 가능해야 합니다.",
+      "status": "pending",
+      "dependencies": [],
+      "createdAt": "2026-06-27T07:45:20.563Z",
+      "updatedAt": "2026-06-27T07:45:20.563Z",
+      "relatedFiles": [
+        {
+          "path": "app/invoice/[id]/error.tsx",
+          "type": "CREATE",
+          "description": "에러 바운더리 신규 생성"
+        },
+        {
+          "path": "app/not-found.tsx",
+          "type": "REFERENCE",
+          "description": "에러 페이지 UI 스타일 참조"
+        },
+        {
+          "path": "components/ui/button.tsx",
+          "type": "DEPENDENCY",
+          "description": "Button 컴포넌트"
+        }
+      ],
+      "implementationGuide": "Next.js error.tsx 규격:\n- 반드시 'use client' 지시어\n- props: `{ error: Error & { digest?: string }, reset: () => void }`\n- useEffect로 에러 로깅: `useEffect(() => { console.error(error) }, [error])`\n\nUI 구조 (not-found.tsx 스타일 참조):\n```\nflex flex-col items-center justify-center min-h-[60vh] text-center px-4\n  AlertCircle 아이콘 (lucide-react, h-12 w-12 text-destructive mb-4)\n  h2: '오류가 발생했습니다' (text-xl font-semibold)\n  p: '견적서를 불러오는 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.' (text-muted-foreground mt-2)\n  Button onClick={reset} className='mt-6': '다시 시도'\n```",
+      "verificationCriteria": "1. app/invoice/[id]/error.tsx 파일 생성 확인\n2. 'use client' 지시어 있음\n3. error, reset props 타입 정의 확인\n4. useEffect로 에러 콘솔 로깅 확인\n5. '다시 시도' 버튼 클릭 시 reset() 호출\n6. TypeScript 타입 에러 없음",
+      "analysisResult": "Phase 4 Task 4.1 — 견적서 시스템 에러 처리 및 로딩 UI 개선. 핵심 목표: (1) Notion API 조회 중 로딩 스켈레톤 UI 표시, (2) API 오류 시 에러 바운더리 페이지 표시, (3) PDF 다운로드 실패 시 alert 대신 sonner toast 표시, (4) getInvoice에 15초 타임아웃 + 에러 타입 분류 적용. 사전 작업: shadcn CLI로 skeleton, sonner 컴포넌트 설치 필요."
+    },
+    {
+      "id": "d0ab491f-37f2-43d4-8c21-4fc694f6d95d",
+      "name": "DownloadButton.tsx alert → sonner toast 교체",
+      "description": "PDF 다운로드 실패 시 사용 중인 alert()를 sonner의 toast.error()로 교체하고, 성공 시 toast.success()를 추가합니다.",
+      "status": "pending",
+      "dependencies": [
+        {
+          "taskId": "27eb61c6-e8c7-4c6a-9c65-d1e65897c42e"
+        }
+      ],
+      "createdAt": "2026-06-27T07:45:20.563Z",
+      "updatedAt": "2026-06-27T07:45:20.563Z",
+      "relatedFiles": [
+        {
+          "path": "components/invoice/DownloadButton.tsx",
+          "type": "TO_MODIFY",
+          "description": "alert → toast 교체",
+          "lineStart": 1,
+          "lineEnd": 60
+        },
+        {
+          "path": "components/ui/sonner.tsx",
+          "type": "DEPENDENCY",
+          "description": "sonner Toaster (layout에서 전역 사용)"
+        }
+      ],
+      "implementationGuide": "components/invoice/DownloadButton.tsx 수정:\n1. 상단에 `import { toast } from 'sonner'` 추가\n2. catch 블록의 `alert(...)` → `toast.error('PDF 다운로드 중 오류가 발생했습니다. 다시 시도해 주세요.')` 교체\n3. try 블록 내 URL.revokeObjectURL 다음에 `toast.success('PDF 다운로드가 완료되었습니다.')` 추가\n4. Toaster가 layout.tsx에 전역 배치되어 있으므로 별도 Toaster import 불필요",
+      "verificationCriteria": "1. DownloadButton.tsx에 alert() 없음 확인\n2. `import { toast } from 'sonner'` 확인\n3. catch 블록에 toast.error() 확인\n4. 성공 시 toast.success() 확인\n5. npm run dev 후 PDF 다운로드 시 토스트 메시지 표시 확인",
+      "analysisResult": "Phase 4 Task 4.1 — 견적서 시스템 에러 처리 및 로딩 UI 개선. 핵심 목표: (1) Notion API 조회 중 로딩 스켈레톤 UI 표시, (2) API 오류 시 에러 바운더리 페이지 표시, (3) PDF 다운로드 실패 시 alert 대신 sonner toast 표시, (4) getInvoice에 15초 타임아웃 + 에러 타입 분류 적용. 사전 작업: shadcn CLI로 skeleton, sonner 컴포넌트 설치 필요."
+    },
+    {
+      "id": "eb303de1-81ad-4b0c-9017-1306e176779b",
+      "name": ".env.local 생성 및 Notion API 환경변수 설정 (Task 4.0)",
+      "description": "Phase 3 전체 기능(Notion 조회, PDF 생성)의 실제 동작을 활성화하는 환경변수 설정 작업. 이 태스크는 사용자가 직접 Notion 대시보드에서 API 키를 발급하고 .env.local 파일에 입력해야 하는 외부 설정 작업임. AI가 .env.local 파일 템플릿을 생성하고, 사용자가 실제 값을 채워 넣는 방식으로 진행.",
+      "notes": "이 태스크 완료 후 기존 등록된 5개 태스크(skeleton/sonner 설치, getInvoice 개선, loading.tsx, error.tsx, DownloadButton toast 교체)를 순차 진행. Notion 페이지 ID는 Notion 페이지 URL에서 확인 가능: https://www.notion.so/{workspace}/{PAGE_ID}",
+      "status": "in_progress",
+      "dependencies": [],
+      "createdAt": "2026-06-27T07:59:11.569Z",
+      "updatedAt": "2026-06-27T13:59:19.007Z",
+      "relatedFiles": [
+        {
+          "path": ".env.example",
+          "type": "REFERENCE",
+          "description": "환경변수 키 이름 및 형식 참조",
+          "lineStart": 1,
+          "lineEnd": 16
+        },
+        {
+          "path": ".env.local",
+          "type": "CREATE",
+          "description": "실제 API 키가 담기는 파일 (신규 생성)"
+        },
+        {
+          "path": ".gitignore",
+          "type": "REFERENCE",
+          "description": ".env* 패턴으로 .env.local 자동 제외 확인",
+          "lineStart": 33,
+          "lineEnd": 36
+        },
+        {
+          "path": "lib/notion.ts",
+          "type": "REFERENCE",
+          "description": "NOTION_API_KEY 사용처 확인 (10번 줄)",
+          "lineStart": 9,
+          "lineEnd": 13
+        }
+      ],
+      "implementationGuide": "1단계: .env.local 파일 생성\n- .env.example을 복사하여 프로젝트 루트에 .env.local 생성\n- (.gitignore에 .env* 패턴이 이미 포함되어 있어 자동으로 git 추적 제외됨)\n\n2단계: Notion Integration 생성 및 API 키 발급 (사용자 직접)\n- https://www.notion.so/my-integrations 접속\n- \"New integration\" 클릭 → 이름 입력 → Internal Integration Token 복사\n- 복사한 토큰을 NOTION_API_KEY 값으로 .env.local에 입력\n\n3단계: Notion 데이터베이스 ID 확인 (사용자 직접)\n- Notion에서 Invoices 데이터베이스 열기 → URL에서 DATABASE_ID 추출\n- Notion에서 Items 데이터베이스 열기 → URL에서 DATABASE_ID 추출\n- 각각 NOTION_DATABASE_ID, NOTION_ITEMS_DATABASE_ID에 입력\n\n4단계: Integration을 두 DB에 연결 (사용자 직접)\n- Invoices DB 우측 상단 ... → Connections → 생성한 Integration 추가\n- Items DB 동일하게 Integration 추가\n\n5단계: 동작 검증\n- npm run dev 실행\n- 브라우저에서 /invoice/[실제노션페이지ID] 접속하여 견적서 표시 확인\n- PDF 다운로드 버튼 클릭하여 PDF 생성 확인\n\n주의: getInvoice()는 pages.retrieve({page_id}) 패턴이므로 URL의 [id]가 직접 Notion 페이지 ID임. NOTION_DATABASE_ID/NOTION_ITEMS_DATABASE_ID는 .env.example 구조 유지 목적으로 보관하되 MVP 코드에서 직접 사용하지 않음.",
+      "verificationCriteria": "1. 프로젝트 루트에 .env.local 파일 존재\n2. NOTION_API_KEY, NOTION_DATABASE_ID, NOTION_ITEMS_DATABASE_ID 3개 키에 실제 값 입력됨\n3. npm run dev 실행 시 에러 없음\n4. 브라우저에서 /invoice/[실제Notion페이지ID] 접속 시 견적서 데이터 정상 표시\n5. PDF 다운로드 버튼 클릭 시 PDF 파일 다운로드 성공",
+      "analysisResult": "Task 4.0: .env.local 생성 및 Notion API 환경변수 설정. 이 작업은 코드 구현이 아닌 외부 시스템 설정 + 사용자 직접 액션이 필요한 작업임. 핵심 발견: getInvoice()는 pages.retrieve({page_id}) 패턴이므로 NOTION_API_KEY만 설정되면 /invoice/[pageId]로 실제 견적서 조회 가능. .gitignore에 이미 .env* 패턴이 포함되어 있어 .env.local은 자동으로 git 추적 제외됨."
+    }
+  ]
+}
