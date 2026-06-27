@@ -18,15 +18,41 @@
 
 ---
 
-## Phase 1 — 애플리케이션 골격 구축 ✅
+## 상태 표기 기준
 
-### Task 1.1: 프로젝트 초기 설정 ✅ — 완료
+이 로드맵은 **실제 파일 존재 여부**와 **실제 동작 가능 여부**를 기준으로 상태를 구분합니다.
+
+| 표기 | 의미 |
+|------|------|
+| ✅ 완료 | 코드 구현 완료 + 실제 동작 가능 |
+| ⚠️ 부분 완료 | 코드는 작성됐으나 환경변수/외부 설정 미완료로 실제 동작 불가 |
+| ❌ 미완료 | 파일/코드 자체가 존재하지 않음 |
+
+> **현재 핵심 차단 요인**: 프로젝트 루트에 `.env.local` 파일이 없어 `NOTION_API_KEY` 등 환경변수가 미설정 상태입니다.
+> 코드(`lib/notion.ts`, `app/api/generate-pdf/route.ts`)는 작성 완료되었으나, Notion API 키가 없으면 **견적서 조회 및 PDF 다운로드가 실제로 동작하지 않습니다.**
+
+---
+
+## Phase 0 — 프로젝트 규칙 정의 ✅
+
+### Task 0.1: 작업 규칙 가이드라인 초기화 ✅ — 완료
+
+- ✅ `shrimp-rules.md` 초기화 완료 (프로젝트 전용 작업 규칙 및 개발 표준 정의)
+- ✅ 프로젝트 아키텍처, 코딩 컨벤션, 파일 구조 표준 문서화
+- ✅ AI 에이전트 작업 시 준수할 핵심 규칙 및 금지 사항 명시
+
+---
+
+## Phase 1 — 애플리케이션 골격 구축 ⚠️
+
+### Task 1.1: 프로젝트 초기 설정 ⚠️ — 부분 완료 (환경변수 미설정)
 
 - ✅ Next.js 15.5.3 App Router 프로젝트 생성 (Turbopack 활성화)
 - ✅ TypeScript, TailwindCSS v4, shadcn/ui (New York 스타일) 설정
 - ✅ `@notionhq/client`, `@react-pdf/renderer` 의존성 설치
 - ✅ `.env.example` 환경변수 구조 정의 (`NOTION_API_KEY`, `NOTION_DATABASE_ID`, `NOTION_ITEMS_DATABASE_ID`)
 - ✅ Import 별칭 구성 (`@/components`, `@/lib`, `@/types`)
+- ❌ `.env.local` 생성 및 실제 환경변수 값 설정 — **미완료** (파일 자체가 존재하지 않음, Notion API 키 미입력으로 실제 동작 불가)
 
 ### Task 1.2: 타입 시스템 정의 ✅ — 완료
 
@@ -72,65 +98,82 @@
 
 ---
 
-## Phase 3 — 핵심 기능 구현 ✅
+## Phase 3 — 핵심 기능 구현 ⚠️ (코드 완료, 환경변수 설정 필요)
 
-### Task 3.1: Notion API 연동 ✅ — 완료
+### Task 3.1: Notion API 연동 ⚠️ — 코드 완료, 환경변수 설정 필요
 
-- ✅ `lib/notion.ts` — `@notionhq/client` 싱글톤 인스턴스 초기화
-- ✅ `getInvoice(pageId)` — 노션 페이지 ID로 견적서 + 연결된 Items 병렬 조회
+> 코드는 모두 작성되었으나 `.env.local`의 `NOTION_API_KEY` / `NOTION_DATABASE_ID` / `NOTION_ITEMS_DATABASE_ID` 미설정으로 **실제 Notion 조회는 동작하지 않음.**
+
+- ✅ `lib/notion.ts` — `@notionhq/client` 싱글톤 인스턴스 초기화 (코드 작성 완료)
+- ✅ `getInvoice(pageId)` — 노션 페이지 ID로 견적서 + 연결된 Items 병렬 조회 (코드 작성 완료)
 - ✅ `notionPageToInvoice()` — Notion 페이지 객체 → `Invoice` 도메인 타입 변환
 - ✅ `notionPageToInvoiceItem()` — Notion Items 페이지 → `InvoiceItem` 변환 (수량×단가 자동 계산)
 - ✅ 존재하지 않는 페이지 / 접근 불가 시 `null` 반환 처리 (try/catch)
+- ❌ 실제 Notion API 키 설정 및 라이브 데이터 조회 검증 — **미완료** (`.env.local` 미생성)
 
-### Task 3.2: PDF 생성 기능 구현 ✅ — 완료
+### Task 3.2: PDF 생성 기능 구현 ⚠️ — 코드 완료, 환경변수 설정 필요
 
 - ✅ `lib/pdf.tsx` — `@react-pdf/renderer`로 A4 견적서 PDF 레이아웃 컴포넌트 정의 (`InvoicePDF`)
 - ✅ PDF 구성: 헤더(견적서 번호), 정보 그리드(수신/발행일/유효기간/상태), 항목 테이블, 합계 행
 - ✅ 한국 원화 포맷 (`toLocaleString('ko-KR')`) 및 날짜 포맷 헬퍼 함수 정의
-- ✅ `app/api/generate-pdf/route.ts` — POST API Route: invoiceId 수신 → Notion 조회 → `renderToBuffer` → PDF 응답
+- ✅ `app/api/generate-pdf/route.ts` — POST API Route: invoiceId 수신 → Notion 조회 → `renderToBuffer` → PDF 응답 (코드 작성 완료)
 - ✅ 한국어 파일명 인코딩 처리 (`Content-Disposition: filename*=UTF-8''...`)
+- ⚠️ API Route 내부에서 `getInvoice()`(Notion 조회)에 의존하므로, 환경변수 미설정 시 PDF 다운로드 **실제 동작 불가**
 
-### Task 3.3: 견적서 페이지 통합 ✅ — 완료
+### Task 3.3: 견적서 페이지 통합 ⚠️ — 코드 완료, 환경변수 설정 필요
+
+> 페이지 렌더링 파이프라인은 완성되었으나 `getInvoice()`가 Notion API 키에 의존하므로, 환경변수 미설정 시 견적서 페이지가 실제 데이터로 동작하지 않음.
 
 - ✅ `app/invoice/[id]/page.tsx` — Server Component에서 `getInvoice()` 호출 및 404 처리 (`notFound()`)
 - ✅ `generateMetadata()` — 견적서 번호/클라이언트명 기반 동적 메타데이터 생성
 - ✅ Notion 데이터 → `InvoiceView` 컴포넌트 렌더링 파이프라인 완성
+- ❌ 실제 Notion 데이터 기반 견적서 페이지 조회 검증 — **미완료** (`.env.local` 미생성)
 
 ---
 
-## Phase 4 — 품질 강화 및 배포
+## Phase 4 — 품질 강화 및 배포 (진행 중)
 
-### Task 4.1: 에러 처리 및 로딩 UI 개선 — 우선순위
+### Task 4.0: 환경변수 설정 (로컬 동작 활성화) — 🚨 차단 해제 최우선
 
-- `app/invoice/[id]/loading.tsx` — 견적서 조회 중 스켈레톤 로딩 UI 구현
-- `app/invoice/[id]/error.tsx` — Notion API 오류 시 에러 바운더리 페이지 구현
-- PDF 다운로드 실패 시 토스트 알림 (`sonner` 또는 shadcn/ui toast) 적용 (현재 `alert()` 사용 중)
-- Notion API 응답 지연 대비 타임아웃 처리 (권장: 15초)
-- `getInvoice` 함수에 에러 타입 분류 (404 vs 권한오류 vs 네트워크오류)
+> Phase 3의 모든 기능이 이 작업에 의존합니다. 이 작업 완료 전까지 견적서 조회/PDF 다운로드는 실제 동작하지 않습니다.
 
-### Task 4.2: 성능 최적화
+- [ ] `.env.example`을 복사하여 `.env.local` 생성
+- [ ] Notion Integration 생성 및 `NOTION_API_KEY` 발급/입력
+- [ ] `NOTION_DATABASE_ID`(Invoices DB), `NOTION_ITEMS_DATABASE_ID`(Items DB) 값 입력
+- [ ] Notion Integration을 두 데이터베이스에 연결(공유)
+- [ ] 로컬 개발 서버에서 실제 견적서 조회 및 PDF 다운로드 동작 확인
 
-- Next.js `revalidate` 설정으로 Notion 데이터 캐싱 전략 수립 (ISR, 권장: 60초)
-- `generateStaticParams` 검토 (자주 조회되는 견적서 사전 생성)
-- PDF 생성 API 응답 크기 최적화 (폰트 서브셋)
-- Core Web Vitals 측정 및 LCP/CLS 개선
-- Vercel Edge Config 및 환경변수 보안 검토
+### Task 4.1: 에러 처리 및 로딩 UI 개선 — 🔥 (Task 4.0 이후 진행)
 
-### Task 4.3: 테스트
+- ❌ `app/invoice/[id]/loading.tsx` — 견적서 조회 중 스켈레톤 로딩 UI 구현 (**파일 미존재**)
+- ❌ `app/invoice/[id]/error.tsx` — Notion API 오류 시 에러 바운더리 페이지 구현 (**파일 미존재**)
+- [ ] PDF 다운로드 실패 시 토스트 알림 (`sonner` 또는 shadcn/ui toast) 적용 (현재 `alert()` 사용 중)
+- [ ] Notion API 응답 지연 대비 타임아웃 처리 (권장: 15초)
+- [ ] `getInvoice` 함수에 에러 타입 분류 (404 vs 권한오류 vs 네트워크오류)
 
-- `lib/notion.ts` 단위 테스트 — `notionPageToInvoice`, `notionPageToInvoiceItem` 변환 함수 검증
-- `lib/pdf.tsx` 통합 테스트 — `InvoicePDF` 렌더링 및 버퍼 생성 검증
-- `app/api/generate-pdf/route.ts` API Route 테스트 — 정상/404/오류 시나리오
-- Playwright MCP E2E 테스트 — 견적서 페이지 접근 → PDF 다운로드 전체 플로우 검증
-- 모바일/태블릿 반응형 렌더링 및 브라우저 호환성 테스트
+### Task 4.2: 성능 최적화 — 대기
 
-### Task 4.4: 배포 및 운영 준비
+- [ ] Next.js `revalidate` 설정으로 Notion 데이터 캐싱 전략 수립 (ISR, 권장: 60초)
+- [ ] `generateStaticParams` 검토 (자주 조회되는 견적서 사전 생성)
+- [ ] PDF 생성 API 응답 크기 최적화 (폰트 서브셋)
+- [ ] Core Web Vitals 측정 및 LCP/CLS 개선
+- [ ] Vercel Edge Config 및 환경변수 보안 검토
 
-- Vercel 프로젝트 연결 및 환경변수 설정 (`NOTION_API_KEY`, `NOTION_DATABASE_ID`, `NOTION_ITEMS_DATABASE_ID`)
-- Vercel 커스텀 도메인 설정
-- Notion Integration 프로덕션 권한 확인 (Invoices DB, Items DB 연결)
-- `next.config.ts` 보안 헤더 설정 (`X-Frame-Options`, `Content-Security-Policy`)
-- 배포 후 실제 노션 데이터로 견적서 조회 및 PDF 다운로드 E2E 검증
+### Task 4.3: 테스트 — 대기
+
+- [ ] `lib/notion.ts` 단위 테스트 — `notionPageToInvoice`, `notionPageToInvoiceItem` 변환 함수 검증
+- [ ] `lib/pdf.tsx` 통합 테스트 — `InvoicePDF` 렌더링 및 버퍼 생성 검증
+- [ ] `app/api/generate-pdf/route.ts` API Route 테스트 — 정상/404/오류 시나리오
+- [ ] Playwright MCP E2E 테스트 — 견적서 페이지 접근 → PDF 다운로드 전체 플로우 검증
+- [ ] 모바일/태블릿 반응형 렌더링 및 브라우저 호환성 테스트
+
+### Task 4.4: 배포 및 운영 준비 — 대기
+
+- [ ] Vercel 프로젝트 연결 및 환경변수 설정 (`NOTION_API_KEY`, `NOTION_DATABASE_ID`, `NOTION_ITEMS_DATABASE_ID`)
+- [ ] Vercel 커스텀 도메인 설정
+- [ ] Notion Integration 프로덕션 권한 확인 (Invoices DB, Items DB 연결)
+- [ ] `next.config.ts` 보안 헤더 설정 (`X-Frame-Options`, `Content-Security-Policy`)
+- [ ] 배포 후 실제 노션 데이터로 견적서 조회 및 PDF 다운로드 E2E 검증
 
 ---
 
@@ -225,15 +268,39 @@
 
 | Phase | 내용 | 상태 |
 |-------|------|------|
-| Phase 1 | 애플리케이션 골격 구축 | ✅ 완료 |
+| Phase 0 | 프로젝트 규칙 정의 (shrimp-rules.md) | ✅ 완료 |
+| Phase 1 | 애플리케이션 골격 구축 | ⚠️ 부분 완료 (`.env.local` 미생성) |
 | Phase 2 | UI/UX 완성 | ✅ 완료 |
-| Phase 3 | 핵심 기능 구현 (Notion API + PDF) | ✅ 완료 |
-| Phase 4 | 품질 강화 및 배포 | 진행 예정 |
+| Phase 3 | 핵심 기능 구현 (Notion API + PDF) | ⚠️ 코드 완료, 환경변수 설정 필요 |
+| Phase 4 | 품질 강화 및 배포 | 🚧 진행 중 (Task 4.0 차단 해제 최우선) |
 | Phase 5 | 관리 기능 (대시보드, 상태 관리) | 계획됨 |
 | Phase 6 | 자동화 및 고급 기능 | 장기 계획 |
+
+### 실제 동작 가능 여부 점검 (코드 vs 런타임)
+
+| 항목 | 코드 작성 | 실제 동작 | 비고 |
+|------|:--------:|:--------:|------|
+| 견적서 페이지 (`app/invoice/[id]/page.tsx`) | ✅ | ❌ | Notion API 키 미설정 |
+| Notion 연동 (`lib/notion.ts`) | ✅ | ❌ | `.env.local` 미생성 |
+| PDF 생성 (`lib/pdf.tsx`) | ✅ | ⚠️ | 렌더링 로직 정상, 단 데이터 소스(Notion) 차단 |
+| PDF API (`app/api/generate-pdf/route.ts`) | ✅ | ❌ | `getInvoice()` 의존 → 키 미설정 |
+| 견적서 UI 컴포넌트 (`components/invoice/*`) | ✅ | ✅ | 데이터만 주입되면 정상 렌더 |
+| 404 페이지 (`app/not-found.tsx`) | ✅ | ✅ | 정상 |
+| 로딩 UI (`app/invoice/[id]/loading.tsx`) | ❌ | ❌ | 파일 미존재 |
+| 에러 바운더리 (`app/invoice/[id]/error.tsx`) | ❌ | ❌ | 파일 미존재 |
+
+### Phase 4 세부 진행 현황
+
+| Task | 내용 | 상태 |
+|------|------|------|
+| Task 4.0 | 환경변수 설정 (`.env.local` 생성) | 🚨 차단 해제 최우선 |
+| Task 4.1 | 에러 처리 및 로딩 UI 개선 (loading/error.tsx 미존재) | 🔥 대기 (4.0 이후) |
+| Task 4.2 | 성능 최적화 (ISR 캐싱) | ⏳ 대기 |
+| Task 4.3 | 테스트 (단위/API/E2E) | ⏳ 대기 |
+| Task 4.4 | 배포 및 운영 준비 (Vercel) | ⏳ 대기 |
 
 ---
 
 **PRD 참조**: docs/PRD.md
 **작성일**: 2025-10-02
-**최종 수정**: 2026-06-20
+**최종 수정**: 2026-06-27

@@ -1,77 +1,215 @@
-# 가족 웹 블로그 — AI Agent 개발 규칙
+# 노션 기반 견적서 관리 시스템 — AI Agent 개발 규칙
 
 ## 1. 프로젝트 개요
 
-- **목적**: 가족 전용 블로그 (공개 읽기, 가족 구성원만 쓰기)
-- **현재 상태**: Next.js 15.5.2 + shadcn/ui 스타터 킷 단계 (블로그 기능 미구현)
+- **목적**: 노션을 단일 데이터 소스로 활용하는 견적서 조회 및 PDF 다운로드 시스템
+- **현재 상태**: Phase 1~3 코드 구현 완료, 단 `.env.local` 미생성으로 Notion 연동 실제 동작 불가 (⚠️ 부분 완료)
+- **진행 중**: Phase 4 — Task 4.0 (.env.local 생성) 최우선, 이후 에러 처리·성능 최적화·배포
 - **핵심 원칙**: Notion이 유일한 데이터 소스, 별도 DB 없음, 과도한 엔지니어링 금지
 
 ---
 
 ## 2. 기술 스택
 
-### 설치 완료 (현재 코드베이스)
-
-| 패키지 | 용도 |
-|--------|------|
-| Next.js 15.5.2 | 프레임워크 (App Router, Turbopack) |
-| React 19.1.0 | UI |
-| TypeScript 5.x | 언어 |
-| TailwindCSS 4.x | 스타일링 |
-| shadcn/ui (New York) | UI 컴포넌트 |
-| next-themes 0.4.6 | 다크모드 |
-| lucide-react | 아이콘 |
-
-### 추가 설치 필요 (기능 구현 시)
-
-| 패키지 | 용도 | 설치 명령 |
-|--------|------|-----------|
-| `@notionhq/client` | Notion API | `npm install @notionhq/client` |
-| `next-auth@beta` | 인증 (Auth.js v5) | `npm install next-auth@beta` |
-| `react-markdown` + `remark-gfm` | 마크다운 렌더링 | `npm install react-markdown remark-gfm` |
-| `date-fns` | 날짜 처리 (한국어 로케일) | `npm install date-fns` |
-| `yet-another-react-lightbox` | 갤러리 라이트박스 | `npm install yet-another-react-lightbox` |
-| `zod` | 환경변수 검증 | `npm install zod` |
+| 패키지 | 버전 | 용도 |
+|--------|------|------|
+| Next.js | 15.5.3 | 프레임워크 (App Router, Turbopack) |
+| React | 19 | UI |
+| TypeScript | 5.x | 언어 |
+| TailwindCSS | 4.x | 스타일링 |
+| shadcn/ui (New York) | — | UI 컴포넌트 |
+| @notionhq/client | — | Notion API |
+| @react-pdf/renderer | — | 서버사이드 PDF 생성 |
+| date-fns | — | 날짜 포맷 (한국어) |
+| next-themes | 0.4.6 | 다크모드 |
+| lucide-react | — | 아이콘 |
 
 ---
 
-## 3. 디렉토리 구조 규칙
-
-### 라우트 그룹 패턴 (준수 필수)
+## 3. 디렉토리 구조 (실제 구현 기준)
 
 ```
 app/
-├── (public)/          # 인증 불필요 — 블로그, 갤러리, 홈
-├── (auth)/            # 인증 관련 — 로그인 페이지, NextAuth API Route
-├── (admin)/           # 인증 필요 — /write, /edit/[slug], /upload
-└── api/               # API Routes
+├── invoice/[id]/
+│   ├── page.tsx          ← 견적서 조회 Server Component (핵심)
+│   ├── loading.tsx       ← ❌ 미생성 (Phase 4 Task 4.1 구현 예정)
+│   └── error.tsx         ← ❌ 미생성 (Phase 4 Task 4.1 구현 예정)
+├── api/
+│   └── generate-pdf/
+│       └── route.ts      ← PDF 생성 API Route (POST, 서버 전용)
+├── (public)/             ← MVP 이후 블로그/갤러리 예정 (현재 미사용)
+├── (admin)/              ← Phase 5 관리자 기능 예정 (현재 미사용)
+├── (auth)/               ← Phase 5 인증 예정 (현재 미사용)
+├── layout.tsx
+├── page.tsx
+└── not-found.tsx
+
+components/
+├── invoice/
+│   ├── InvoiceView.tsx   ← 견적서 전체 컨테이너 (헤더 + 테이블 + 버튼 조합)
+│   ├── InvoiceHeader.tsx ← 견적서 번호, 발행일, 유효기간, 클라이언트명, 상태
+│   ├── InvoiceTable.tsx  ← 항목 테이블 + 합계 행
+│   └── DownloadButton.tsx ← PDF 다운로드 버튼 (Client Component)
+├── ui/                   ← shadcn/ui 전용, 직접 편집 금지 (skeleton.tsx, sonner.tsx ❌ 미설치)
+├── layout/               ← navbar.tsx, footer.tsx, theme-toggle.tsx
+└── providers/            ← theme-provider.tsx
+
+lib/
+├── notion.ts             ← Notion 클라이언트 싱글톤 + 모든 Notion API 함수
+├── pdf.tsx               ← InvoicePDF 컴포넌트 (서버사이드 전용)
+├── auth.ts               ← Phase 5 인증 예정 (현재 미사용)
+├── cloudinary.ts         ← Phase 5 예정 (현재 미사용)
+└── utils.ts              ← cn() 유틸리티
+
+types/
+├── invoice.ts            ← Invoice, InvoiceItem, InvoiceStatus (핵심)
+├── notion.ts             ← Notion API 응답 타입
+├── post.ts               ← Phase 5 블로그 예정
+└── gallery.ts            ← Phase 5 갤러리 예정
 ```
-
-### 컴포넌트 배치 규칙
-
-- `components/ui/` — shadcn/ui 컴포넌트 전용, **직접 편집 금지**
-- `components/layout/` — Navbar, Footer, ThemeToggle
-- `components/blog/` — PostCard, PostList, PostForm (신규 생성)
-- `components/gallery/` — AlbumCard, PhotoGrid, Lightbox (신규 생성)
-- `components/auth/` — LoginForm, UserMenu (신규 생성)
-
-### lib/ 파일 배치 규칙
-
-- `lib/utils.ts` — cn() 유틸리티, 범용 헬퍼만
-- `lib/notion.ts` — Notion API 클라이언트 + 포스트/앨범/사진 조회 함수
-- `lib/notion-renderer.tsx` — Notion 블록 → React 컴포넌트 변환
-- `lib/cloudinary.ts` — Cloudinary 업로드 헬퍼
-- `lib/auth.ts` — NextAuth.js 설정 (providers, callbacks)
-
-### types/ 파일 배치 규칙
-
-- `types/post.ts` — Post, PostMeta 타입
-- `types/gallery.ts` — Album, Photo 타입
-- `types/notion.ts` — Notion API 응답 타입
 
 ---
 
-## 4. TailwindCSS v4 스타일링 규칙
+## 4. 핵심 데이터 파이프라인
+
+### 견적서 조회 흐름
+
+```
+URL /invoice/[id]
+  → app/invoice/[id]/page.tsx (Server Component)
+  → getInvoice(pageId)        [lib/notion.ts]
+      → notion.pages.retrieve({ page_id })       ← Invoices DB
+      → Promise.all(itemRelations.map(retrieve))  ← Items DB 병렬 조회
+      → notionPageToInvoice(page, items)
+      → notionPageToInvoiceItem(itemPage)
+  → Invoice 타입 반환
+  → null이면 notFound() 호출 → not-found.tsx
+  → <InvoiceView invoice={invoice} />
+```
+
+### PDF 다운로드 흐름
+
+```
+DownloadButton 클릭 (Client Component)
+  → fetch('/api/generate-pdf', { method: 'POST', body: { invoiceId } })
+  → app/api/generate-pdf/route.ts
+      → getInvoice(invoiceId)    [lib/notion.ts]
+      → renderToBuffer(InvoicePDF({ invoice }))  [lib/pdf.tsx]
+      → Response(pdfBytes, { 'Content-Type': 'application/pdf' })
+  → blob URL 생성 → <a> 태그 클릭 → 다운로드
+```
+
+---
+
+## 5. Notion API 규칙
+
+### 클라이언트 초기화
+
+- **`lib/notion.ts`에서만 `new Client()` 호출** — 다른 파일에서 Notion 클라이언트 초기화 절대 금지
+- 싱글톤 패턴: 파일 최상단에 한 번만 초기화
+
+```typescript
+// lib/notion.ts — 유일한 Notion 클라이언트 초기화 위치
+const notion = new Client({ auth: process.env.NOTION_API_KEY });
+```
+
+### 속성 접근 패턴 (필수)
+
+- Notion 속성 접근 시 반드시 optional chaining + null 병합 사용
+- 속성이 없으면 적절한 기본값 반환
+
+```typescript
+// 올바른 방법
+props.invoice_number?.title?.[0]?.plain_text ?? ""
+props.status?.select?.name ?? "대기"
+props.total_amount?.number ?? 0
+
+// 금지 — TypeError 발생 위험
+props.invoice_number.title[0].plain_text
+```
+
+### 변환 함수 규칙
+
+- `notionPageToInvoice()` — `lib/notion.ts` 내부 전용 함수, 외부 export 금지
+- `notionPageToInvoiceItem()` — `lib/notion.ts` 내부 전용 함수, 외부 export 금지
+- 변환 함수 추가 시 `lib/notion.ts`에만 작성
+
+### 에러 처리
+
+- `getInvoice()` 내부의 try/catch에서 모든 Notion 에러 처리
+- 존재하지 않는 페이지, 접근 불가, 네트워크 오류 → 모두 `null` 반환
+- 호출 측에서 null 체크 후 `notFound()` 호출
+
+### notionAny 패턴 (기존 코드 호환)
+
+- `databases.query`가 타입상 제거된 경우 `const notionAny = notion as any` 사용 중
+- 신규 함수에서도 `databases.query` 사용 시 동일 패턴 유지
+
+---
+
+## 6. PDF 생성 규칙
+
+- **`lib/pdf.tsx`는 서버사이드 전용** — `"use client"` 컴포넌트에서 import 절대 금지
+- `InvoicePDF` 컴포넌트는 `@react-pdf/renderer`의 `Document`, `Page`, `Text`, `View`, `StyleSheet`만 사용
+- HTML 태그 혼용 금지 (`<div>`, `<p>` 등은 @react-pdf/renderer 안에서 작동하지 않음)
+- 한국어 폰트: 현재 Helvetica 사용 (ASCII만 지원) — 한국어 텍스트는 노션에서 영문/숫자 위주 데이터만 담길 것을 가정
+- 한국 원화 포맷: `amount.toLocaleString('ko-KR') + '원'` 패턴 사용
+- 날짜 포맷: `dateStr.replace(/-/g, '/')` 패턴 (YYYY/MM/DD 형식)
+- API Route에서 `renderToBuffer()` 사용 후 `new Uint8Array(buffer)`로 변환
+
+---
+
+## 7. 견적서 컴포넌트 규칙
+
+### InvoiceView.tsx (Server Component 가능)
+
+- `InvoiceHeader`, `InvoiceTable`, `DownloadButton`을 조합하는 컨테이너
+- Invoice 타입 전체를 prop으로 받아 하위 컴포넌트에 분배
+
+### DownloadButton.tsx (Client Component 필수)
+
+- 반드시 `"use client"` 지시어 포함
+- PDF 다운로드 트리거: `fetch('/api/generate-pdf', { method: 'POST', body: JSON.stringify({ invoiceId }) })`
+- 로딩 상태 UI 포함 (다운로드 중 버튼 비활성화)
+- 현재 에러 시 `alert()` 사용 → Phase 4에서 toast로 교체 예정
+- 인쇄 시 숨김: `className="print:hidden"` 적용
+
+### 새 Invoice 컴포넌트 추가 시
+
+- `components/invoice/` 폴더에 배치
+- Client Component 필요 시에만 `"use client"` 추가 (기본: Server Component)
+
+---
+
+## 8. 환경변수 규칙
+
+### **⚠️ 현재 상태: `.env.local` 파일 없음 — 모든 Notion 관련 기능 동작 불가**
+
+- `.env.local` 파일이 존재하지 않음 (`.env.example`만 있음)
+- 개발/구현 작업 전에 반드시 `.env.local`을 생성하고 실제 값을 입력해야 함
+- 생성 방법: `.env.example`을 복사 후 실제 API 키로 채울 것
+
+### MVP 필수 환경변수
+
+```bash
+NOTION_API_KEY=secret_xxxxx          # Notion Integration Token
+NOTION_DATABASE_ID=xxxxx             # Invoices 데이터베이스 ID
+NOTION_ITEMS_DATABASE_ID=xxxxx       # Items 데이터베이스 ID
+```
+
+### 환경변수 변경 시 동시 수정 파일
+
+- `.env.local` (실제 값)
+- `.env.example` (빈 값, 키만)
+
+### 환경변수 접근
+
+- `process.env.NOTION_API_KEY` — 서버사이드에서만 접근 가능
+- Client Component에서 환경변수 노출 금지 (`NEXT_PUBLIC_` 없이는 클라이언트에서 undefined)
+
+---
+
+## 9. TailwindCSS v4 스타일링 규칙
 
 - **`tailwind.config.ts` 파일 생성 금지** — v4는 CSS 기반 설정 사용
 - CSS 변수 추가 시 → `app/globals.css`의 `@theme inline` 블록에만 추가
@@ -79,10 +217,11 @@ app/
 - 컨테이너 레이아웃 → 반드시 `mx-auto max-w-screen-2xl px-4` 사용
 - 색상 → OKLCH 값 사용 (`oklch(0.205 0 0)` 형식)
 - Border radius → CSS 변수 사용 (`--radius-sm`, `--radius-md`, `--radius-lg`, `--radius-xl`)
+- Inline style 사용 금지
 
 ---
 
-## 5. shadcn/ui 컴포넌트 규칙
+## 10. shadcn/ui 컴포넌트 규칙
 
 - 컴포넌트 추가: `npx shadcn@latest add [component-name]` 명령만 사용
 - `components/ui/` 파일 직접 수정 금지 (shadcn CLI가 관리)
@@ -92,190 +231,83 @@ app/
 
 ---
 
-## 6. Notion 연동 규칙
-
-### 데이터베이스 구조
-
-| DB 이름 | 환경변수 | 주요 필드 |
-|---------|---------|----------|
-| `Blog Posts` | `NOTION_BLOG_DB_ID` | Title, Slug, Status(Published/Draft), Category, Tags, Author, Published At, Cover Image, Excerpt |
-| `Gallery Albums` | `NOTION_ALBUMS_DB_ID` | Name, Slug, Description, Cover Image, Date, Published |
-| `Gallery Photos` | `NOTION_PHOTOS_DB_ID` | Title, Album(Relation), Image URL, Taken At, Order |
-
-### Notion 읽기 패턴
-
-```typescript
-// lib/notion.ts에서만 Notion 클라이언트 초기화
-const notion = new Client({ auth: process.env.NOTION_API_KEY });
-
-// 포스트 목록 기본 쿼리 조건
-filter: { property: "Status", select: { equals: "Published" } }
-sorts: [{ property: "Published At", direction: "descending" }]
-```
-
-### Notion 쓰기 패턴
-
-- 웹 에디터 → 마크다운 작성 → Notion 블록으로 변환 후 저장
-- 이미지 → 반드시 Cloudinary에 먼저 업로드 → 영구 URL을 Notion `image` 블록으로 저장
-- Server Action 또는 API Route (`/api/posts`)에서만 Notion 쓰기 호출
-
-### ISR 캐싱 전략
-
-```typescript
-// 블로그 목록: 60초
-export const revalidate = 60;
-
-// 블로그 상세 및 갤러리: 300초
-export const revalidate = 300;
-
-// 쓰기/수정/삭제 후 즉시 갱신
-revalidatePath('/blog');
-revalidatePath(`/blog/${slug}`);
-```
-
----
-
-## 7. 이미지 처리 규칙
-
-- **Notion 첨부파일 URL 직접 사용 절대 금지** — 1시간 후 만료됨
-- 모든 이미지는 Cloudinary에 업로드 후 영구 URL만 사용
-- Notion에 저장하는 이미지 URL은 반드시 Cloudinary URL
-- `next.config.ts`에 Cloudinary 도메인 추가 필수:
-  ```typescript
-  images: { domains: ['res.cloudinary.com'] }
-  ```
-- 업로드 제한: 최대 10MB, JPG/PNG/WebP만 허용
-- Next.js `<Image>` 컴포넌트 사용 (HTML `<img>` 태그 사용 금지)
-
----
-
-## 8. 인증 규칙
-
-- **인증 시스템**: NextAuth.js v5 (Auth.js) — `lib/auth.ts`
-- **API Route**: `app/(auth)/api/auth/[...nextauth]/route.ts`
-- **미들웨어**: `middleware.ts` (루트 레벨) — 보호 경로 접근 제어
-
-### 보호 경로 목록 (middleware.ts에 반드시 포함)
-
-```
-/write
-/edit/:path*
-/upload
-/api/posts (POST, PUT, DELETE)
-/api/upload (POST)
-/api/photos (POST)
-```
-
-### 가족 인증 방식
-
-- 허용 이메일: `ALLOWED_EMAILS` 환경변수 (콤마 구분)
-- 별도 사용자 DB 없음 — 환경변수만으로 관리
-- 미인증 사용자의 보호 경로 접근 → `/login` 리다이렉트
-
----
-
-## 9. 환경변수 규칙
-
-### 필수 환경변수 목록
-
-```bash
-# Notion
-NOTION_API_KEY=
-NOTION_BLOG_DB_ID=
-NOTION_ALBUMS_DB_ID=
-NOTION_PHOTOS_DB_ID=
-
-# NextAuth.js
-NEXTAUTH_SECRET=
-NEXTAUTH_URL=
-
-# Google OAuth
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-
-# 허용된 가족 이메일 (콤마 구분)
-ALLOWED_EMAILS=
-
-# Cloudinary
-CLOUDINARY_CLOUD_NAME=
-CLOUDINARY_API_KEY=
-CLOUDINARY_API_SECRET=
-NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=
-```
-
-### 환경변수 변경 시 동시 수정 파일
-
-- `.env.local` (실제 값)
-- `.env.example` (빈 값, 키만)
-- `docs/PRD.md` 섹션 8
-
----
-
-## 10. 파일 동시 수정 규칙
+## 11. 파일 동시 수정 규칙
 
 | 작업 | 동시 수정 필요 파일 |
 |------|-------------------|
-| 새 라우트 그룹 추가 | `middleware.ts` (보호 여부 확인) |
-| Notion DB 스키마 변경 | `types/notion.ts` + 해당 도메인 타입 파일 (`types/post.ts` 또는 `types/gallery.ts`) |
-| 환경변수 추가 | `.env.local` + `.env.example` + `docs/PRD.md` 섹션 8 |
-| Navbar 링크 추가 | `components/layout/navbar.tsx` (데스크탑 + 모바일 뷰 모두) |
-| API Route 추가 | 인증 필요 여부 → `middleware.ts` 매처 업데이트 |
-| Notion 필드 추가 | `lib/notion.ts` 쿼리 함수 + 해당 타입 파일 |
+| Notion 속성 필드 추가/변경 | `lib/notion.ts` 변환 함수 + `types/invoice.ts` |
+| Invoice 타입 변경 | `types/invoice.ts` + `lib/notion.ts` + 영향받는 컴포넌트 |
+| 환경변수 추가 | `.env.local` + `.env.example` |
+| PDF 레이아웃 변경 | `lib/pdf.tsx`만 수정 (API Route는 건드리지 않음) |
+| 새 API Route 추가 | 라우트 파일 + 필요 시 `middleware.ts` 보호 경로 추가 |
+| Invoice 컴포넌트 prop 변경 | 해당 컴포넌트 + `InvoiceView.tsx` (prop 전달 조정) |
 
 ---
 
-## 11. API Route 설계 규칙
+## 12. Phase 4 작업 가이드 (현재 진행 중)
 
-```
-GET    /api/posts                    → 포스트 목록 (page, category, tag 쿼리 파라미터)
-GET    /api/posts/[slug]             → 포스트 상세 (Notion 블록 포함)
-POST   /api/posts                   → 새 포스트 생성 (인증 필요)
-PUT    /api/posts/[slug]             → 포스트 수정 (인증 필요, 작성자 본인만)
-DELETE /api/posts/[slug]             → 포스트 삭제 (인증 필요, 작성자 본인만)
-GET    /api/albums                   → 앨범 목록
-GET    /api/albums/[slug]/photos     → 앨범 사진 목록
-POST   /api/upload                   → Cloudinary 업로드 (인증 필요)
-POST   /api/photos                   → 사진 메타데이터 Notion 저장 (인증 필요)
-```
+### 🚨 Task 4.0: .env.local 생성 (모든 작업의 전제 조건)
+
+- `.env.local` 파일이 없으면 Notion API 호출 전체가 실패함
+- 구현 시작 전 반드시 `.env.local` 생성 및 3개 환경변수 설정 확인
+
+### 에러 처리 개선 (Task 4.1, 우선)
+
+- `app/invoice/[id]/loading.tsx` — 스켈레톤 UI 추가
+- `app/invoice/[id]/error.tsx` — API 오류 시 에러 바운더리
+- `DownloadButton.tsx`의 `alert()` → shadcn/ui toast로 교체 (sonner 또는 toast 컴포넌트)
+- `getInvoice()` 에러 분류: 404 vs 권한 오류 vs 네트워크 오류
+
+### 성능 최적화
+
+- `app/invoice/[id]/page.tsx`에 `export const revalidate = 60` 추가 (ISR)
+- PDF 생성 API 폰트 최적화 검토
+
+### 보안 헤더
+
+- `next.config.ts`에 `X-Frame-Options`, `Content-Security-Policy` 추가
 
 ---
 
-## 12. 금지 사항
+## 13. 금지 사항
 
-- **Prisma, Supabase, MySQL, PostgreSQL 등 별도 DB 추가 금지** — Notion이 유일한 데이터 소스
-- **Notion 첨부파일 URL(`attachment.notion.so`) 사용 금지** — 1시간 후 만료
+- **별도 DB 추가 금지** (Prisma, Supabase, MySQL 등) — Notion이 유일한 데이터 소스
+- **`lib/notion.ts` 외 파일에서 `new Client()` 호출 금지**
+- **`lib/pdf.tsx`를 Client Component에서 import 금지** — 서버사이드 전용
 - **`tailwind.config.ts` 파일 생성 금지** — v4는 CSS 기반 설정
 - **`components/ui/` 파일 직접 수정 금지** — shadcn CLI 전용
 - **HTML `<img>` 태그 사용 금지** — Next.js `<Image>` 사용
-- **`/write`, `/edit`, `/upload` 경로를 인증 없이 접근 가능하게 하는 코드 금지**
-- **AWS S3, Firebase Storage 등 Cloudinary 외 이미지 스토리지 추가 금지**
-- **불필요한 추상화 레이어 추가 금지** — 작동하는 것이 완벽한 것보다 낫다
+- **Notion 속성 접근 시 optional chaining 생략 금지** — undefined 런타임 오류 발생
+- **Notion 첨부파일 URL 직접 사용 금지** — 1시간 후 만료됨 (Cloudinary 경유 필요)
+- **`@react-pdf/renderer` 컴포넌트에 HTML 태그 혼용 금지** (`<div>`, `<p>` 등)
+- **MVP 범위 외 기능 구현 금지** — Phase 5 이후 기능(인증, 대시보드, 이메일)은 현재 구현 대상 아님
 
 ---
 
-## 13. AI 의사결정 기준
+## 14. AI 의사결정 기준
 
 ### 새 기능 구현 시 판단 순서
 
-1. PRD(`docs/PRD.md`) Phase 단계 확인 → 현재 Phase에 해당하는 기능인가?
-2. Notion에서 처리 가능한가? → 가능하면 별도 구현 없이 Notion API 활용
-3. 새 패키지 필요한가? → `docs/PRD.md` 섹션 4.2의 확정 목록에 있는 패키지만 추가
-4. 인증이 필요한 기능인가? → `middleware.ts` 보호 경로에 추가
+1. **`.env.local` 존재 여부 확인** → 없으면 생성 후 진행 (Notion 관련 작업의 전제 조건)
+2. `docs/ROADMAP.md` Phase 확인 → 현재 Phase 4에 해당하는 기능인가?
+3. Notion 데이터 관련이라면 → `lib/notion.ts`에 함수 추가
+3. UI 변경이라면 → `components/invoice/` 내 컴포넌트 수정 또는 추가
+5. PDF 관련이라면 → `lib/pdf.tsx` 수정 + `app/api/generate-pdf/route.ts` 확인
+6. 새 패키지 필요하다면 → `docs/PRD.md` 확정 목록에 있는 패키지만 추가
 
 ### 컴포넌트 선택 기준
 
-- shadcn/ui에 있는 컴포넌트 → shadcn/ui 사용 (`npx shadcn@latest add`)
-- 없는 경우 → `components/[도메인]/` 폴더에 직접 작성
+- shadcn/ui에 있는 컴포넌트 → `npx shadcn@latest add` 사용
+- 없는 경우 → `components/invoice/` 또는 `components/layout/`에 직접 작성
 - 서드파티 UI 라이브러리 추가 금지 (MUI, Chakra 등)
 
-### 스타일링 충돌 시
+### Server vs Client Component 판단
 
-- TailwindCSS 유틸리티 클래스 우선
-- 커스텀 CSS 필요 시 `app/globals.css`에만 추가
-- Inline style 사용 금지
+- 기본값: Server Component (파일 최상단에 `"use client"` 없이 시작)
+- Client Component 필요 조건: `useState`, `useEffect`, 이벤트 핸들러, `useRouter`, 브라우저 API 사용 시
+- `DownloadButton.tsx`처럼 fetch + 상태 관리가 필요한 경우만 Client Component
 
-### 캐싱 전략 선택 기준
+### Notion 데이터 타입 오류 시
 
-- 읽기 빈도 높은 페이지 → ISR (`export const revalidate = N`)
-- 쓰기 후 즉시 반영 필요 → `revalidatePath()` 호출
-- 실시간 데이터 → `no-store` (최후 수단)
+- Notion 속성 타입 변경 순서: `types/invoice.ts` → `lib/notion.ts` 변환 함수 → 컴포넌트
+- 속성이 없을 때는 기본값 반환 (에러 throw 금지, `null` 반환 또는 빈 문자열 사용)
