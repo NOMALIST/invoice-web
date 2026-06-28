@@ -15,9 +15,10 @@ import {
 import { cn } from "@/lib/utils";
 
 // 네비게이션 메뉴 항목 정의
-// (admin) route group은 URL에 영향 없으므로 /dashboard로 매핑됨
+// (admin) route group은 URL에 영향 없으므로 /admin 접두사 없이 매핑됨
 const navItems = [
-  { href: "/dashboard", label: "견적서 목록", icon: FileText },
+  { href: "/dashboard", label: "대시보드", icon: FileText },
+  { href: "/invoices", label: "견적서 관리", icon: FileText },
 ];
 
 /** 네비게이션 링크 목록 — 데스크톱/모바일 공용 */
