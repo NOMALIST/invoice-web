@@ -1,0 +1,11 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "env": {
+    "NOTION_API_KEY": "@notion-api-key",
+    "NOTION_DATABASE_ID": "@notion-database-id",
+    "NOTION_ITEMS_DATABASE_ID": "@notion-items-database-id"
+  }
+}

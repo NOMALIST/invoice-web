@@ -1,26 +1,24 @@
-# Next.js Starter Kit
+# 노션 기반 견적서 관리 시스템
 
-현대적인 웹 개발을 위한 완전한 스타터 킷입니다.
+노션을 단일 데이터 소스로 활용하는 견적서 조회 및 PDF 다운로드 시스템입니다.
+클라이언트는 고유 URL로 견적서를 확인하고 PDF를 다운로드할 수 있으며, 관리자는 대시보드에서 견적서를 관리합니다.
 
-## ✨ 기술 스택
+## 기술 스택
 
-- **[Next.js v15](https://nextjs.org)** - React 기반 풀스택 프레임워크
-- **[TypeScript](https://www.typescriptlang.org)** - 타입 안전성을 위한 언어
-- **[TailwindCSS v4](https://tailwindcss.com)** - 유틸리티 기반 CSS 프레임워크
-- **[shadcn/ui](https://ui.shadcn.com)** - 재사용 가능한 UI 컴포넌트
-- **[Lucide React](https://lucide.dev)** - 아름다운 아이콘 라이브러리
-- **[next-themes](https://github.com/pacocoursey/next-themes)** - 다크모드 지원
+- **[Next.js v16](https://nextjs.org)** - App Router, Server Components, Server Actions
+- **[TypeScript](https://www.typescriptlang.org)** - 타입 안전성
+- **[TailwindCSS v4](https://tailwindcss.com)** - 유틸리티 기반 스타일링
+- **[shadcn/ui](https://ui.shadcn.com)** - UI 컴포넌트 (New York 스타일)
+- **[@notionhq/client](https://github.com/makenotion/notion-sdk-js)** - Notion API
+- **[@react-pdf/renderer](https://react-pdf.org)** - 서버사이드 PDF 생성
+- **[next-themes](https://github.com/pacocoursey/next-themes)** - 라이트/다크 테마
 
-## 🚀 빠른 시작
+## 빠른 시작
 
 ### 1. 의존성 설치
 
 ```bash
 npm install
-# 또는
-yarn install
-# 또는
-pnpm install
 ```
 
 ### 2. 환경변수 설정
@@ -29,99 +27,83 @@ pnpm install
 cp .env.example .env.local
 ```
 
-`.env.local` 파일을 편집하여 필요한 환경변수를 설정하세요.
+`.env.local`에 실제 값을 입력합니다:
+
+```env
+NOTION_API_KEY=secret_...          # Notion Integration 시크릿 키
+NOTION_DATABASE_ID=...             # 견적서 데이터베이스 ID
+NOTION_ITEMS_DATABASE_ID=...       # 견적 항목 데이터베이스 ID
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
+```
+
+> Notion API 키 발급 및 데이터베이스 ID 확인 방법은 [배포 가이드](docs/DEPLOY.md)를 참조하세요.
 
 ### 3. 개발 서버 실행
 
 ```bash
 npm run dev
-# 또는
-yarn dev
-# 또는
-pnpm dev
 ```
 
-[http://localhost:3000](http://localhost:3000)에서 결과를 확인하세요.
+[http://localhost:3000](http://localhost:3000)에서 확인하세요.
 
-## 📁 프로젝트 구조
+---
+
+## 주요 기능
+
+### 클라이언트 공개 기능
+- **견적서 조회**: `/invoice/[id]` — 노션 데이터베이스에서 견적서 데이터를 가져와 웹으로 표시
+- **PDF 다운로드**: 견적서 페이지에서 즉시 PDF 생성 및 다운로드
+
+### 관리자 기능
+- **관리자 로그인**: `/login` — ID: `admin` / PW: `admin` (MVP 하드코딩)
+- **대시보드**: `/dashboard` — 견적서 상태별 통계 카드 + 최근 5건 미리보기
+- **견적서 목록**: `/invoices` — 전체 견적서 목록 테이블 + 클라이언트 링크 복사
+
+---
+
+## 프로젝트 구조
 
 ```
-├── app/                    # Next.js 앱 라우터
-│   ├── globals.css        # 전역 스타일
-│   ├── layout.tsx         # 루트 레이아웃
-│   └── page.tsx           # 홈페이지
-├── components/            # React 컴포넌트
-│   ├── ui/               # shadcn/ui 컴포넌트
-│   ├── layout/           # 레이아웃 컴포넌트
-│   └── providers/        # Context 프로바이더
-├── lib/                  # 유틸리티 함수
-└── public/               # 정적 파일
+app/
+├── (public)/           # 공개 라우트 (Navbar + Footer 레이아웃)
+│   └── page.tsx        # 랜딩 페이지
+├── (admin)/            # 관리자 라우트 (AdminSidebar + AdminHeader 레이아웃)
+│   ├── dashboard/      # 통계 대시보드
+│   └── invoices/       # 견적서 목록
+├── (auth)/
+│   └── login/          # 관리자 로그인 페이지
+├── invoice/[id]/       # 클라이언트 견적서 조회 페이지
+└── api/generate-pdf/   # PDF 생성 API Route
+
+components/
+├── admin/              # 관리자 전용 컴포넌트
+├── invoice/            # 견적서 뷰 컴포넌트
+├── layout/             # Navbar, Footer, ThemeToggle
+└── ui/                 # shadcn/ui 컴포넌트
+
+lib/
+├── notion.ts           # Notion API 클라이언트 + 헬퍼 함수
+└── pdf.tsx             # PDF 렌더링 컴포넌트
+
+proxy.ts                # 관리자 라우트 보호 미들웨어
 ```
 
-## 🎨 UI 컴포넌트
+---
 
-이 프로젝트는 shadcn/ui를 사용합니다. 새로운 컴포넌트를 추가하려면:
+## 개발 명령어
 
 ```bash
-npx shadcn@latest add [component-name]
+npm run dev          # 개발 서버 실행 (Turbopack)
+npm run build        # 프로덕션 빌드
+npm run check-all    # 타입 체크 + 린트 + 포맷 검사 통합 실행
+npm run test         # 단위 테스트 실행 (Vitest)
+npm run test:e2e     # E2E 테스트 실행 (Playwright)
 ```
 
-사용 가능한 컴포넌트:
-- Button, Card, Input, Label
-- Navigation Menu, Dropdown Menu
-- Badge 등
+---
 
-## 🌙 다크모드
+## 배포
 
-다크모드가 기본적으로 설정되어 있습니다:
-- 시스템 테마 자동 감지
-- 라이트/다크/시스템 모드 전환
-- 테마 상태 유지
-
-## 📝 스크립트
-
-- `npm run dev` - 개발 서버 실행
-- `npm run build` - 프로덕션 빌드
-- `npm run start` - 프로덕션 서버 실행
-- `npm run lint` - ESLint 실행
-
-## 🔧 사용자 정의
-
-### 테마 색상 변경
-
-`app/globals.css`에서 CSS 변수를 수정하여 테마를 사용자 정의할 수 있습니다.
-
-### 컴포넌트 추가
-
-`components/` 디렉토리에 새로운 컴포넌트를 추가하세요. shadcn/ui 컴포넌트는 `components/ui/`에 자동으로 설치됩니다.
-
-## 🚀 배포
-
-### Vercel (권장)
+Vercel 배포를 권장합니다. 단계별 가이드는 [docs/DEPLOY.md](docs/DEPLOY.md)를 참조하세요.
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new)
-
-### 기타 플랫폼
-
-- **Netlify**: `npm run build && npm run export`
-- **Docker**: Dockerfile 포함
-- **정적 호스팅**: `npm run build && npm run export`
-
-## 📚 학습 자료
-
-- [Next.js 문서](https://nextjs.org/docs)
-- [TailwindCSS 문서](https://tailwindcss.com/docs)
-- [shadcn/ui 문서](https://ui.shadcn.com)
-- [TypeScript 문서](https://www.typescriptlang.org/docs)
-
-## 🤝 기여하기
-
-1. 이 저장소를 포크합니다
-2. 기능 브랜치를 생성합니다 (`git checkout -b feature/amazing-feature`)
-3. 변경사항을 커밋합니다 (`git commit -m '멋진 기능 추가'`)
-4. 브랜치에 푸시합니다 (`git push origin feature/amazing-feature`)
-5. Pull Request를 생성합니다
-
-## 📄 라이선스
-
-MIT 라이선스 하에 배포됩니다. 자세한 내용은 `LICENSE` 파일을 참조하세요.
