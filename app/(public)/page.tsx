@@ -94,6 +94,16 @@ export default async function HomePage() {
           </div>
         )}
       </section>
+
+      {/* 관리자 로그인 — subtle한 링크로 페이지 하단에 배치 */}
+      <div className="pt-4 text-center">
+        <Link
+          href="/login"
+          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          관리자 로그인
+        </Link>
+      </div>
     </div>
   );
 }
